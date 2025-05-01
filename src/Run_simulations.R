@@ -138,6 +138,7 @@ if(!dir.exists(parent_outdir)){
 outdir_cHcP <- paste0(parent_outdir,"/",prefix,"_CH2_",CH2,"_CP2_",CP2,"_",suffix)
 outdir_simulations <- paste0(outdir_cHcP,"/simulations/simulations_CH2_",CH2,"_CP2_",CP2,"_",seed)
 outdir <- outdir_cHcP
+outdir_long <- paste0(outdir_cHcP,"/all_dynamics_long")
 
 if(!dir.exists(outdir_cHcP)){
   dir.create(outdir_cHcP,recursive = TRUE)
@@ -147,8 +148,67 @@ if(!dir.exists(outdir_simulations)){
   dir.create(outdir_simulations,recursive = TRUE)
 }
 
+if(!dir.exists(outdir_long)){
+  dir.create(outdir_long,recursive = TRUE)
+}
+
+
 
 baseoutname <- paste0(prefix,"_phi_",phi,"_cH_2_",CH2,"_cP_2_",CP2,"_s_",sigma,"_bH_",betaH,"_bP_",betaP,"_seed_",seed)
+
+simulation2long <- function(simprefix, outdir){
+  to_read <- paste0(simprefix,"_dynamics.txt")
+  daten <- read.table(to_read)
+  prefix <- gsub("_dynamics.txt","", basename(to_read))
+  
+  names(daten) <- c("time",paste0("H1_",0:3), paste0("H2_",0:3), paste0("P_",0:7))
+  
+  # Convert the dynamics to a tibble
+  daten <- as_tibble(daten) 
+  
+  # Get the information on the genotypes for the hosts
+  hl_info <- read.table(paste0(simprefix,"_genotypeH2.txt"),header=T,
+                        colClasses=c("character","character","character",rep("numeric",times=10))) %>%
+    as_tibble() %>%
+    mutate(HostID=paste(Host,ID,sep="_"))
+  
+  # Read the pathogen genotype info file
+  pl_info <- read.table(paste0(simprefix,"_genotypeP.txt"),header=T,
+                        colClasses=c("character","character","character", rep("numeric",times=10))) %>%
+    as_tibble() %>%
+    mutate(ParaID=paste(Para,ID,sep="_"))
+  
+  # Convert the tibble into long format
+  daten_long <- daten %>% 
+    pivot_longer(!time,names_to="Type",values_to="freq") %>% 
+    separate(Type,c("Species","ID"),sep="_",remove=F)
+  
+  # Add the host genotype information
+  daten_long <- left_join(daten_long, hl_info %>% select(HostID, Genotype),
+                          by=c("Type"="HostID"))
+  
+  # Add the pathogen genotype information
+  daten_long <- left_join(daten_long, pl_info %>% select(ParaID, Genotype),
+                          by=c("Type"="ParaID"))
+  
+  # Replace the missing values
+  daten_long <- daten_long %>% 
+    replace_na(list(Genotype.x = "", Genotype.y=""))
+  # Combine the two separate genotype columns into a single column
+  daten_long <- daten_long %>% 
+    unite("Genotype",Genotype.x,Genotype.y,sep="")
+  
+  # Calculate the cumulative frequencies
+  daten_longer_cumsum <- daten_long %>%
+    group_by(Species, time) %>%
+    mutate(Genotype = factor(Genotype, levels = c("000","100","010","001","110","101","011","111"))) %>%
+    arrange(time, Species, Genotype)  %>%
+    mutate(cumsum_freq = cumsum(freq)) %>%
+    mutate(lower_freq = cumsum_freq - freq)
+  
+  write_tsv(daten_longer_cumsum, paste0(outdir_long,"/",prefix,"_long.tsv"))
+  
+}
 
 
 ##################################
@@ -171,25 +231,6 @@ for(CH1 in cH_1){
                         "_bP_",betaP,
                         "_seed_",seed,
                         "_",suffix)
-    # Prepare the labels
-    plabel <- paste0(prefix,"_phi_",phi,
-                     "_cH_1_",CH1,
-                     "_cH_2_",CH2,
-                     "_cP_1_",CP1,
-                     "_cP_2_",CP2,
-                     "_s_",sigma,
-                     "_bH_",betaH,
-                     "_bP_",betaP,
-                     "_seed_",seed,
-                     "_",suffix)
-    hlabel <- paste0("phi=",phi,"     sigma=",sigma,
-                     "\ncH_1=",CH1,
-                     "  cP_1=",CP1,
-                     "\ncH_2=",CH2,"     cP_2=",
-                     CP2,"\nbetaH=",betaH,
-                     "    betaP=",betaP,
-                     "\nseed=",seed)
-    
     
     print("Before running simulation")
     
@@ -211,6 +252,8 @@ for(CH1 in cH_1){
                  "--excheck",excheck,
                  "--seed",seed))
     print("After running simulation")
+    
+    simulation2long(simprefix,outdir)
     
   }
 }
