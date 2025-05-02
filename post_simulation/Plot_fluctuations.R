@@ -373,70 +373,13 @@ if(exists("p1") & exists("p2") & exists("p3") & exists("dynamicflt_plt1") & exis
   dev.off()
 }
 
-# Generate Figure 1 and the supplementary Figure
+# Generate Figure 1 
 if(CH1 == 0.1 & CP1 == 0.1 & CP2 == 3 & CH2 == 3 & phi == 0.5 & seed == 1600){
   Fig1 <- (dynamicflt_plt1 + p1) / (dynamicflt_plt2 + p2)+ (dynamicflt_plt3 + p3) + 
     plot_layout(guides = "collect") + plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")")
   
   pdf(paste0(plotdir,"/Fig1.pdf"), width = 10, height = 10)
   print(Fig1)
-  dev.off()
-  
-  
-  daten_sub <- daten |> filter(time > 9120 & time < 9250)
-  
-  phase_1 <- ggplot(daten_sub , aes(P_3, H1_2)) + 
-    geom_path(color = "gray50") +
-    geom_point() +
-    geom_point(data = daten_sub |> head(n=1), aes(P_3, H1_2), size = 3, shape = 17) +#+
-    geom_point(data = daten_sub |> tail(n=1), aes(P_3, H1_2), size = 3, shape = 15) +
-    xlim(0,0.5) +
-    ylim(0,1) + theme_bw()  + 
-    xlab(expression(P[110])) + 
-    ylab(expression(H["001"])) +
-    ggtitle("Host H")
-  
-  
-  phase_2 <- ggplot(daten_sub , aes(P_3, H2_2)) + 
-    geom_path(color = "gray50") +
-    geom_point() +
-    geom_point(data = daten_sub |> head(n=1), aes(P_3, H2_2), size = 3, shape = 17) +
-    geom_point(data = daten_sub |> tail(n=1), aes(P_3, H2_2), size = 3, shape = 15) +
-    xlim(0,0.5) +
-    ylim(0,1) + 
-    theme_bw() + 
-    xlab(expression(P[110])) + 
-    ylab(expression(M["001"])) + 
-    ggtitle("Host M")
-  
-  
-  phase_3 <- ggplot(daten_sub , aes(P_3, H1_1)) + 
-    geom_path(color = "gray50") +
-    geom_point() +
-    geom_point(data = daten_sub |> head(n=1), aes(P_3, H1_1), size = 3, shape = 17) +
-    geom_point(data = daten_sub |> tail(n=1), aes(P_3, H1_1), size = 3, shape = 15) +
-    xlim(0,0.5) +
-    ylim(0,1) + theme_bw()  + 
-    xlab(expression(P[110])) + 
-    ylab(bquote(H["010"]))
-  
-  
-  phase_4 <- ggplot(daten_sub , aes(P_3, H2_1)) + 
-    geom_path(color = "gray50") +
-    geom_point() +
-    geom_point(data = daten_sub |> head(n=1), aes(P_3, H2_1), size = 3, shape = 17) +
-    geom_point(data = daten_sub |> tail(n=1), aes(P_3, H2_1), size = 3, shape = 15) +
-    xlim(0,0.5) +
-    ylim(0,1) + theme_bw() + 
-    xlab(expression(P[110])) + 
-    ylab(expression(M["100"]))
-  
-  
-  suppl1 <- (phase_1 + phase_2) / (phase_3 + phase_4) + 
-    plot_layout(guides = "collect")
-  
-  pdf(paste0(plotdir,"/supplement_Fig1_9120_9250.pdf"), width = 6.5, height = 6)
-  print(suppl1)
   dev.off()
   
 }
