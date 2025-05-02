@@ -335,7 +335,7 @@ dev.off()
 # Write the files underlying the plots
 write_tsv(dpts, paste0(outprefix,"_interval_means_seed.tsv"))
 write_tsv(sumover_investigation_dat,  paste0(outprefix,"_interval_means_overall.tsv"))
-write_tsv(investigation_dat, paste0(outprefix, "_all_seeds_combined.tsv"))
+#write_tsv(investigation_dat, paste0(outprefix, "_all_seeds_combined.tsv"))
 
 # Select some seeds for generating some dynamic comparison plots
 pick_seed_10 <- sample(sum_investigation_dat |> pull(seed) |> unique(), 10, replace = FALSE)
