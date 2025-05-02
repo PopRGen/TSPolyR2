@@ -81,7 +81,7 @@ seed_interval <- pargs[["seed_interval"]]
 
 
 if(!dir.exists(plotdir)){
-  dir.create(plotdir)
+  dir.create(plotdir, recursive = TRUE)
 }
 
 outprefix <- paste0(plotdir,"/CH1_", CH1_select,"_CP1_", CP1_select, "_CH2_", CH2, "_CP2_", CP2, "_phi_", phi_select)
@@ -204,10 +204,13 @@ test <- bind_rows(testH1, testH2, testP) |> mutate(Genotype = factor(Genotype, l
 experiment <- left_join(test, sum_investigation_dat, by=c("interval_level", "seed", "Species", "Genotype")) |> 
   arrange(seed, Species, Genotype, interval_level)
 
+# This a sanity check. 
+print("Running sanity check 1.")
 no_dpts <- experiment |> filter(is.na(n_obs)) |> 
   group_by(interval_level, seed) |> 
   summarize(n=n())
 
+print("Running sanity check 2.")
 # Check that everything worked fine
 no_dpts |> filter(n!=16)
 
@@ -329,10 +332,12 @@ pdf(paste0(outprefix,"_sd_tint.pdf"), width = 13, height = 6.5)
 print(sd_plt)
 dev.off()
 
+# Write the files underlying the plots
 write_tsv(dpts, paste0(outprefix,"_interval_means_seed.tsv"))
 write_tsv(sumover_investigation_dat,  paste0(outprefix,"_interval_means_overall.tsv"))
 write_tsv(investigation_dat, paste0(outprefix, "_all_seeds_combined.tsv"))
 
+# Select some seeds for generating some dynamic comparison plots
 pick_seed_10 <- sample(sum_investigation_dat |> pull(seed) |> unique(), 10, replace = FALSE)
 pick_seed_2 <- sample(pick_seed_10, 2, replace = FALSE)
 
@@ -341,25 +346,6 @@ b <- c(0, 0.2, 0.4, 0.6, 0.8, 1)
 filter_investigation_dat <- filter_investigation_dat |>
   mutate(seed_level = factor(seed, levels=sort(unique(as.numeric(seed)))))
 
-
-interval_img_plt <- ggplot(filter_investigation_dat |> filter(seed%in%pick_seed_10), aes(Genotype, interval_level)) +
-  geom_tile(aes(fill = mean_freq)) +  
-  geom_text(aes(label = round(mean_freq, 2)), color = "white", size = 2.2) +
-  scale_fill_gradientn(limits = c(0,1),
-                       colours=c("navyblue", "lightblue3", "lightblue", "darkorange1", "darkorange3", "brown3"),
-                       breaks=b, labels=format(b)) +
-  facet_grid(cols = vars(Species), rows = vars(seed), scales = "free_x") + 
-  theme_bw() +
-  theme(strip.text.x = element_text(size = 12, face = "bold"),
-        axis.text = element_text(size = 11),
-        axis.title = element_text(size = 12, face = "bold"),
-        legend.title = element_blank(),
-        title = element_text(size = 12, face = "bold")) +
-  ylab("time") 
-
-pdf(paste0(outprefix, "_interval_img.pdf"), width = 8, height = 10)
-print(interval_img_plt)
-dev.off()
 
 # This plot is structured as follows:
 # facet_wrap for genotypes with four columns and two rows
@@ -433,49 +419,29 @@ outtest <- lapply(investigation_list, function(seed_dat){
     filter(time%in%c(0, as.numeric(times_to_select))) |>
     left_join(times_to_select_tib |> select(time, speGeno) |> rename("lost_geno"="speGeno"), by="time")
   
-  seed_ext_heat_plt <- ggplot(snaps_losses, aes(Genotype, as.factor(time))) +
-    geom_tile(aes(fill = freq)) +  
-    geom_text(aes(label = round(freq, 6)), color = "white", size = 2.2) +
-    scale_fill_gradientn(limits = c(0,1),
-                         colours=c("navyblue", "lightblue3", "lightblue", "darkorange1", "darkorange3", "brown3"),
-                         breaks=b, labels=format(b)) +
-    facet_wrap(vars(Species), ncol =3, scales = "free_x") + 
-    theme_minimal() +
-    theme(strip.text.x = element_text(size = 12, face = "bold"),
-          axis.text = element_text(size = 11),
-          axis.title = element_text(size = 12, face = "bold"),
-          legend.title = element_blank(),
-          title = element_text(size = 12, face = "bold")) +
-    ylab("time") 
-
-  return(list(times_to_select_tib, dat_subset, snaps_losses, seed_ext_heat_plt))
+  return(list(times_to_select_tib, dat_subset, snaps_losses))
   
 })
 
-datapts <- lapply(outtest, function(x){
-  return(x[[2]])
-})
-
+# These are the extinction time points
 extpts <- lapply(outtest, function(x){
   return(x[[1]])
 })
 
+# This is a data set which contains all information about all data points where a given genotype
+# hasn't gone extinct yet.
+datapts <- lapply(outtest, function(x){
+  return(x[[2]])
+})
+
+# allele frequencies of all genotypes at the last recorded time point before any genotype goes extinct
 losspts <- lapply(outtest, function(x){
   return(x[[3]])
 })
 
-ls_image_list <- lapply(outtest, function(x){
-  return(x[[4]])
-})
 
-pdf(paste0(outprefix,"_seed_ext_freqs_heat.pdf"), width = 12 , height =5)
-for(i in 1:length(ls_image_list)){
-  print(ls_image_list[[i]])
-}
-dev.off()
-
+# Combine into dataframes
 datpts_dat <- bind_rows(datapts)
-
 
 extpts_dat <- bind_rows(extpts) |>
   mutate(Genotype = factor(Genotype, levels = c("000","100","010","001","110","101","011","111")))
@@ -484,7 +450,7 @@ losspts_dat <- bind_rows(losspts) |>
   mutate(Genotype = factor(Genotype, levels = c("000","100","010","001","110","101","011","111")))
 
 
-
+# These are theplots for 10 randomly selected seeds of the extinction dynamics
 extdyn1_plt <- ggplot(datpts_dat |> filter(seed%in%pick_seed_10[1:5]), aes(time, freq)) +
   geom_line(aes(color=Genotype)) +
   scale_color_manual(values =  c("000"="gray80", "100"="#D9565CFF","010"="#F28A8AFF",
@@ -508,6 +474,8 @@ extdyn2_plt <- ggplot(datpts_dat |> filter(seed%in%pick_seed_10[6:10]), aes(time
              key_glyph = "path", linewidth = 1) +
   scale_shape_manual(values=c(0,2,6,1,3,7,8,9), breaks = c("000","100","010","001","110","101","011","111"))
 
+# Extinction dynamics for 10 randomly chosen seeds
+# Show the extinction times of all genotypes and the frequencies of all other genotypes
 pdf(paste0(outprefix,"_extdyn.pdf"), width = 11, height = 5)
 print(extdyn1_plt)
 print(extdyn2_plt)
@@ -517,6 +485,7 @@ ext_sum <- extpts_dat |>
   group_by(Species, Genotype) |>
   summarize(n=n())
 
+# Boxplot of the exinction times across seeds
 extbxplt <- ggplot(extpts_dat, aes(time, Genotype)) +
   facet_grid(rows=vars(Species)) + 
   geom_boxplot(aes(color=Genotype), alpha = 0.8) +
@@ -527,24 +496,8 @@ extbxplt <- ggplot(extpts_dat, aes(time, Genotype)) +
   geom_text(data=ext_sum, aes(Inf, Genotype, label = paste("n=",n)), hjust = 1.2)
 
 
-
 pdf(paste0(outprefix,"_extbxplt.pdf"), width = 7, height = 5)
 print(extbxplt)
-dev.off()
-
-extorder_seed_plt <- ggplot(extpts_dat |> arrange(time), aes(time, as.factor(seed))) +
-  #geom_path(aes(group=speGeno, linetype = speGeno)) +
-  geom_point(aes(color = Species, shape = Genotype), size = 3) +
-  scale_color_manual(values = c("#490092FF", "#006DDBFF"  ,"#004949FF")) +
-  scale_shape_manual(values = c(0:3,5:8)) + 
-  theme_bw() +
-  theme(panel.grid.major.y = element_line(linewidth = 2),
-        panel.grid.major.x = element_blank()) +
-  ylab("Seed")
-
-
-pdf(paste0(outprefix,"_extbxplt_seed.pdf"), width = 7.5, height = 4.5)
-print(extorder_seed_plt)
 dev.off()
 
 extorder_plt <- ggplot(extpts_dat, aes(ext_order, as.factor(seed))) +
@@ -564,6 +517,7 @@ pdf(paste0(outprefix, "_extinction_order.pdf"), width = 4.5, height = 8)
 print(extorder_plt)
 dev.off()
 
+# Write the underlying data tables to a file
 write_tsv(extpts_dat, paste0(outprefix, "_extpts_dat.tsv"))
 write_tsv(losspts_dat, paste0(outprefix, "_losspts_dat.tsv"))
 
@@ -583,6 +537,8 @@ if(any(pplt_check < 10)){
     slice_tail(n=5)
 }
 
+# These are the dynamics of all remaining pathogen genotypes in time interval 95,000 - 10,000
+# for the ten randomly chosen seeds
 pat_dynamics_plt <- ggplot(pplt_final |> filter(freq > 0), aes(time, freq)) +
   geom_line(aes(color=as.factor(seed)))  +
   theme_bw() +
@@ -606,7 +562,8 @@ if(any(pplt_check < 10)){
     slice_tail(n=5)
 }
 
-
+# These are the dynamics of all remaining host genotypes in time interval 95,000 - 10,000
+# for the ten randomly chosen seeds
 host_dynamics_plt <- ggplot(hostplt_final |> filter(freq > 0), aes(time, freq)) +
   geom_line(aes(color=as.factor(seed)))  +
   theme_bw() +
@@ -651,7 +608,7 @@ if(!any(pplt_check < 10)){
     mutate(cat = "last_5")
 }
 
-write_tsv(mean_data_last_wider, paste0(outprefix,"_last5000_means.tsv"))
+write_tsv(mean_data_last_wider, paste0(outprefix,"_last_means.tsv"))
 write_tsv(hostplt_final, paste0(outprefix,"_last_pointsH.tsv"))
 write_tsv(pplt_final, paste0(outprefix,"_last_pointsP.tsv"))
 
@@ -701,38 +658,4 @@ if(!any(pplt_check < 10)){
   print(average_dyn_pend_plt)
   dev.off()
 }
-
-initial_cond <- investigation_dat |> 
-  filter(time == 0) |>
-  arrange(seed) |>
-  select(seed, Species, Genotype, freq) 
-
-
-initial_plt <- ggplot(initial_cond, aes(Genotype, as.factor(seed))) +
-  geom_tile(aes(fill = freq)) +  
-  geom_text(aes(label = round(freq, 2))) +
-  scale_fill_gradientn(limits = c(0,1),
-                       colours=c("navyblue", "lightblue3", "lightblue", "darkorange1", "darkorange3", "brown3"),
-                       breaks=b, labels=format(b)) +
-  facet_wrap(vars(Species), ncol =3, scales = "free_x") + 
-  theme_minimal() +
-  theme(strip.text.x = element_text(size = 12, face = "bold"),
-        axis.text = element_text(size = 11),
-        axis.title = element_text(size = 12, face = "bold"),
-        legend.title = element_blank(),
-        title = element_text(size = 12, face = "bold")) +
-  ylab("Seed") +
-  ggtitle("Initial frequencies")
-  
-
-
-pdf(paste0(outprefix,"_initial.pdf"), width = 10, height = 4.5)
-print(initial_plt)
-dev.off()
-  
-initial_cond_wider <- initial_cond |>
-  mutate(freq = round(freq, digits = 2)) |> 
-  pivot_wider(names_from = seed, values_from = freq) 
-
-write_tsv(initial_cond_wider, paste0(outprefix,"_initial_cond.tsv"))
 
