@@ -40,11 +40,11 @@ args <- add_argument(args, arg = "--phi",
                      type = "numeric")
 args <- add_argument(args, arg = "--hinfo",
                      help = "host genotype info file",
-                     default = "TSPolyR/auxillaries/genotypesH_info.txt", 
+                     default = "TSPolyR2/auxillaries/genotypesH_info.txt", 
                      type = "character")
 args <- add_argument(args, arg = "--pinfo",
                      help = "host genotype info file",
-                     default = "TSPolyR/auxillaries/genotypesP_info.txt", 
+                     default = "TSPolyR2/auxillaries/genotypesP_info.txt", 
                      type = "character")
 
 
