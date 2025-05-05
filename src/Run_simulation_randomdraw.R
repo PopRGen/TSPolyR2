@@ -88,9 +88,9 @@ args <- add_argument(args,arg="--outdir",
                      default = "../../results_random",
                      type="character")
 args <- add_argument(args,arg="--nreps",
-                     help="Output directory for the simulation results",
+                     help="number of repetitions",
                      default = 10,
-                     type="numeric")
+                     type = "numeric")
 
 
 ####################################
@@ -156,7 +156,8 @@ if(!dir.exists(outdir_simulations)){
 combis <- data.frame(cH_1 = round(runif(nreps, cH1_min, cH1_max), digits = 5),
                      cP_1 = round(runif(nreps, cP1_min, cP1_max), digits = 5),
                      phi = round(runif(nreps, phi_min, phi_max), digits = 5),
-                     seed = sample(1:25000, nreps))
+                     seed = sample(1:25000, nreps),
+                     simulationID = paste0("simulation_", sprintf("%05d", 1:nreps)))
 
 ##################################
 ## MAIN ##########################
@@ -179,7 +180,8 @@ for(i in 1:nrow(combis)){
   CP1 <- round(combis[i,"cP_1"], digits = 3)
   phi <- round(combis[i,"phi"], digits = 3)
   seed <- combis[i,"seed"]
-  simprefix <- paste0(outdir_simulations,"/", fprefix,"_simulation_", sprintf("%05d", i))
+  simulationID <- combis[i, "simulationID"]
+  simprefix <- paste0(outdir_simulations,"/", fprefix,"_", simulationID)
     
   print(paste("Before running simulation:", sprintf("%05d",i)))
     
@@ -202,11 +204,13 @@ for(i in 1:nrow(combis)){
                  "--seed",seed))
   print(paste("After running simulation:", sprintf("%05d",i)))
     
-  last_line <- system(paste("tail -n1",  paste0(outdir_simulations,"/", fprefix,"_simulation_", sprintf("%05d", i), "_dynamics.txt")), intern = T)
-  system(paste0("echo ",last_line,"simulation_", sprintf("%05d", i), " >>", outfile))
+  last_line <- system(paste("tail -n1",  paste0(outdir_simulations,"/", fprefix,"_", simulationID, "_dynamics.txt")), intern = T)
+  system(paste0("echo ",last_line, simulationID, " >>", outfile))
     
   if( (i%%50) == 0 ){
     system(paste0("cd ",outdir_simulations,";", paste("tar -rf", tararchive, paste0(fprefix, "_simulation*"))))
     system(paste0("cd ",outdir_simulations,"; rm *_simulation*"))
   }
 }
+
+
