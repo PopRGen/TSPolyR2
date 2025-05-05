@@ -38,6 +38,15 @@ args <- add_argument(args, arg = "--phi",
                      help = "phi value",
                      default = "0.5",
                      type = "numeric")
+args <- add_argument(args, arg = "--hinfo",
+                     help = "host genotype info file",
+                     default = "TSPolyR/auxillaries/genotypesH_info.txt", 
+                     type = "character")
+args <- add_argument(args, arg = "--pinfo",
+                     help = "host genotype info file",
+                     default = "TSPolyR/auxillaries/genotypesP_info.txt", 
+                     type = "character")
+
 
 
 pargs <- parse_args(args)
@@ -49,8 +58,9 @@ cP_2 <- pargs[["cP_2"]]
 parent_dir <- pargs[["parent_dir"]]
 nreps <- pargs[["nreps"]]
 seed_value <- pargs[["rseed"]]
-hinfo_file <- "genotypeH_info.txt"
-pinfo_file <- "genotypeP_info.txt"
+hinfo_file <- pargs[["hinfo"]]
+pinfo_file <- pargs[["pinfo"]]
+
 
 
 rgenes_maintained <- function(sum_dat_host, haplocol){
@@ -116,6 +126,22 @@ combmaintaineddat <- function(maintained_unparsed){
 }
 
 outdir <- paste0(parent_dir, "/", prefix, "_CH2_", cH_2, "_CP2_", cP_2, "_random_combis_", suffix, "_phi_", phi)
+summarydir <- paste0(parent_dir, "/end_summaries")
+enddir <- paste0(parent_dir, "/end_results")
+combidir <- paste0(parent_dir, "/simulated_combinations")
+
+if(!dir.exists(summarydir)){
+  dir.create(summarydir, recursive = T)
+}
+
+if(!dir.exists(enddir)){
+  dir.create(enddir, recursive = T)
+}
+
+if(!dir.exists(combidir)){
+  dir.create(combidir, recursive = T)
+}
+
 fileprefix <- paste0("CH2_",cH_2,"_CP2_",cP_2,"_random_r_",nreps,"_RSEED_",seed_value)
 
 daten <- read_delim(paste0(outdir,"/simulations/",fileprefix,"_end.txt"), 
@@ -123,9 +149,12 @@ daten <- read_delim(paste0(outdir,"/simulations/",fileprefix,"_end.txt"),
 
 #names(daten) <- c("origin","time",paste0("H1_",0:3), paste0("H2_",0:3), paste0("P_",0:7))
 names(daten) <- c("time",paste0("H1_",0:3), paste0("H2_",0:3), paste0("P_",0:7), "origin")
+write_tsv(daten, paste0(enddir,"/",fileprefix,"_phi_", phi, ".tsv"))
 
 info <- read_tsv(paste0(outdir,"/simulations/",fileprefix,".tsv"))
 names(info) <- c("CH1","CP1", "phi", "seed")
+
+write_tsv(info, paste0(combidir,"/",fileprefix,"_phi_", phi, ".tsv"))
 
 info <- info |>
   mutate(ID= sprintf("%05d",1:nrow(info)))
@@ -263,20 +292,20 @@ pbarplt <- ggplot(outP, aes(x=Species, fill=range_summary)) +
   theme_minimal() +
   facet_grid(cols=vars(phi), labeller=label_bquote(cols = phi == .(phi))) +
   scale_fill_manual(values = c("1" = "#AFB42B",
-                                "2" = "#FFA726FF",
-                                "3" = "#F57C00FF",
-                                "4" = "#FF95A8FF",
-                                "5" = "#EC407AFF",
-                                "6" = "#C2185BFF",
-                                "7" = "#8A4198FF",
-                                "8" = "mediumorchid3",
-                                "9" = "lightblue",
-                                "10" = "darkseagreen2",
-                                "11" = "limegreen",
-                                "12" = "#008EA0FF",
-                                "13" = "darkturquoise",
-                                "14" = "#1A5355FF",
-                                "15" = "black"),
+                               "2" = "#FFA726FF",
+                               "3" = "#F57C00FF",
+                               "4" = "#FF95A8FF",
+                               "5" = "#EC407AFF",
+                               "6" = "#C2185BFF",
+                               "7" = "#8A4198FF",
+                               "8" = "mediumorchid3",
+                               "9" = "lightblue",
+                               "10" = "darkseagreen2",
+                               "11" = "limegreen",
+                               "12" = "#008EA0FF",
+                               "13" = "darkturquoise",
+                               "14" = "#1A5355FF",
+                               "15" = "black"),
                      labels = c("1" = "0",
                                 "2" = "1",
                                 "3" = "0 + 1",
@@ -299,7 +328,7 @@ pbarplt <- ggplot(outP, aes(x=Species, fill=range_summary)) +
   labs(x = "Pathogen",
        y = "Proportion") 
 
-write_tsv(outP |> mutate(CH2=cH_2, CP2=cP_2),paste0(outdir,"/outP_", fileprefix , "_phi_", phi,".tsv"))
+write_tsv(outP |> mutate(CH2=cH_2, CP2=cP_2), paste0(summarydir,"/outP_", fileprefix , "_phi_", phi,".tsv"))
 
 out_test <- out |>
   filter(Species%in%c("H1","H2")) |>
@@ -309,7 +338,7 @@ out_test <- out |>
   #filter(!(Species=="H2" & phi == 1) )
   filter(!(Species=="H2" & phi == 1) & !is.na(phi))
 
-write_tsv(out_test |> mutate(CH2=cH_2, CP2=cP_2),paste0(outdir,"/outH_", fileprefix , "_phi_", phi,".tsv"))
+write_tsv(out_test |> mutate(CH2=cH_2, CP2=cP_2), paste0(summarydir,"/outH_", fileprefix , "_phi_", phi,".tsv"))
 
 rbarplt <- ggplot(out_test, aes(x=Species, fill=R_alleles)) + 
   geom_bar(stat = "count", position = "fill", show.legend = TRUE) + 
