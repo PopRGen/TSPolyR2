@@ -184,9 +184,9 @@ rm ${TAR}
 
 ### Summarize the results
 
-The results can be summarize with 
+The results can be summarized with [post_simulation/summarize_analyze_random.R](./docs/post_simulation/summarize_analyze_random.R).
 
-This submission script below can be used to summarize the simulations for $c_H^{(2)}=c_P^{(2)}=3$, $\phi=0.5$ and RSEED=1700 (the seed making sure that the random draws in R are reproducible).
+The following submission can be used to summarize the simulations for $c_H^{(2)}=c_P^{(2)}=3$, $\phi=0.5$ and RSEED=1700 (the seed making sure that the random draws in R are reproducible).
 
 ```{bash,eval=F}
 #!/bin/bash
@@ -240,7 +240,7 @@ Rscript --vanilla TSPolyR2/post_simulation/summarize_analyze_random.R \
 
 ### Plot Figures 2-6
 
-Figures 2-6 can be plotted using the script [post_simulation/plot_figures_2-6.R](./docs/post_simulation/plot_figures_2-6.R). It requires that all pairwise combinations of $c_H^{(2)} \in \{-3,0,3\}$, $c_P^{(2)} \in \{-3,0,3\}$ and $\phi \in \{0.5, 0.7, 0.9, 1\}$ prior to runnint the script. Find a job submission script below.
+Figures 2-6 can be plotted using the script [post_simulation/plot_figures_2-6.R]. It requires that all pairwise combinations of $c_H^{(2)} \in \{-3,0,3\}$, $c_P^{(2)} \in \{-3,0,3\}$ and $\phi \in \{0.5, 0.7, 0.9, 1\}$ prior to runnint the script. Find a job submission script below.
 
 ```{bash, eval=F}
 #!/bin/bash
@@ -263,7 +263,7 @@ Rscript --vanilla TSPolyR2/post_simulation/plot_figures_2-6.R \
 
 ## Recipe 3: Running simulations for fixed combinations of $c_P^{(1)}$, $c_H^{(1)}$, $c_H^{(2)}$, $c_P^{(2)}$ and $\phi$ with random intial frequencies.
 
-Follow steps 1. and 2. from recipe 1. Use the script [src/Run_simulation.R](./docs/src/Run_simulation.md) to run a simulation inside an array job. Below is the script to run all pairwise combinations of $c_H^{(1)} \in \{0.1, 0.2, 0.3\}$, $c_P^{(1)} \in \{0.1, 0.2, 0.3\}$, for $c_H^{(2)}=c_P^{(2)}=3$ and $\phi=0.5$.  A copy of the corresponding simulation schedule `schedules_r50/schedule_ext_reps_CH2_3_CP2_3_phi_0.5_2025-01-07_random.txt` can be found in `auxillaries/schedules_r50`. Make sure that the submission script from below is placed into a parent directory, which contains a copy of this respository as a subdirectory and a `schedules_r50` subdirectory with the simulation schedule. Otherwise the submission script needs to be modified. 
+Follow steps 1. and 2. from recipe 1. Use the script [src/Run_simulation.R] to run a simulation inside an array job. Below is the script to run all pairwise combinations of $c_H^{(1)} \in \{0.1, 0.2, 0.3\}$, $c_P^{(1)} \in \{0.1, 0.2, 0.3\}$, for $c_H^{(2)}=c_P^{(2)}=3$ and $\phi=0.5$.  A copy of the corresponding simulation schedule `schedules_r50/schedule_ext_reps_CH2_3_CP2_3_phi_0.5_2025-01-07_random.txt` can be found in `auxillaries/schedules_r50`. Make sure that the submission script from below is placed into a parent directory, which contains a copy of this respository as a subdirectory and a `schedules_r50` subdirectory with the simulation schedule. Otherwise the submission script needs to be modified. 
 
 ```{bash,eval=F}
 #!/bin/bash
