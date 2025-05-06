@@ -152,7 +152,7 @@ names(daten) <- c("time",paste0("H1_",0:3), paste0("H2_",0:3), paste0("P_",0:7),
 write_tsv(daten, paste0(enddir,"/",fileprefix,"_phi_", phi, ".tsv"))
 
 info <- read_tsv(paste0(outdir,"/simulations/",fileprefix,".tsv"))
-names(info) <- c("CH1","CP1", "phi", "seed")
+names(info) <- c("CH1","CP1", "phi", "seed", "simulationID")
 
 write_tsv(info, paste0(combidir,"/",fileprefix,"_phi_", phi, ".tsv"))
 
