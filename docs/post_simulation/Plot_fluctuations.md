@@ -38,7 +38,4 @@ Rscript --vanilla Plot_fluctuations.R [OPTIONS]
 
 - `<plotdir>/dynamics_cH2_<CH2>_cP2_<CP2>_phi_<phi>_cH1_<CH1>_cP1_<CP1>.pdf`: Plot of the dynamics over time.
 
-- `/scratch/hm2840/modelling_rerun/Fig1.pdf`: Figure 1 as shown in the current version of the paper (assuming standard settings are used).
-
-- `/scratch/hm2840/modelling_rerun/supplement_Fig1_9120_9250.pdf`: Phase plane for the standard combination of parameters for time interval 9120-9250. These figure was used later to generate an annotated supplementary figure.
-
+- `Fig1.pdf`: Figure 1 as shown in the current version of the paper (assuming standard settings are used).
