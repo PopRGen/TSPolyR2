@@ -120,7 +120,7 @@ outdir_simulations <- paste0(outdir_cHcP,"/all_dynamics_long")
 
 
 # Simulation prefix. This is the entire file name prefix for all the result files of the simulation
-simprefix <- paste0(outdir_simulations,"/",prefix,"_phi_",phi,"_cH_1_",CH1,"_cH_2_",CH2,"_cP_1_",CP1,"_cP_2_",CP2,"_s_",sigma,"_bH_",betaH,"_bP_",betaP,"_seed_",seed,"_",suffix)
+simprefix <- paste0(prefix,"_phi_",phi,"_cH_1_",CH1,"_cH_2_",CH2,"_cP_1_",CP1,"_cP_2_",CP2,"_s_",sigma,"_bH_",betaH,"_bP_",betaP,"_seed_",seed,"_",suffix)
 
 # Read the dynamics from the file
 daten_longer_cumsum <- read_tsv(paste0(simprefix,"_long.tsv"))
@@ -140,7 +140,42 @@ daten_longer_cumsum <- daten_longer_cumsum |>
     Species%in%c("H1", "H2") ~ "Hosts",
     Species == "P" ~ "Pathogen",
     TRUE ~ "unidentified"
-  ))
+  )) |>
+  mutate(Genotype = factor(Genotype, levels = c("000", "100", "010", "001", "110", "101", "011", "111")))
+
+
+dynamicflt_plt_full <- ggplot(daten_longer_cumsum,
+                              aes(x=time)) +
+  annotate("rect", fill = "gray20", alpha = 0.5, xmin = c(0, 9000, 99000), xmax = c(1000, 10000, 100000), ymin = -Inf, ymax = Inf) +  
+  geom_line(aes(x=time, y=freq, color = Genotype),  linewidth = 0.2) +
+  scale_alpha_manual(values=c(1, 0.5, 1)) +
+  facet_grid(rows = vars(Species_label), scales = "free_y") +
+  scale_color_manual(values =  c("000"="gray80", "100"="#D9565CFF","010"="#F28A8AFF",
+                                 "001"="brown4","110"="#1BB6AFFF","101"="#088BBEFF","011"="#172869FF","111"="gray20")) +
+  theme_bw(base_size = 14) +
+  theme(panel.grid.major.x = element_line(color = "gray40"), panel.grid.minor.x = element_line(color = "gray80")) +
+  ylab("freq") +
+  #labs(subtitle = "(a)") +
+  #scale_linetype_manual(values = c("Host H"="solid", "Host M"="11", "Pathogen"="solid")) +
+  ylab("Genotype frequency") +
+  ylim(0,1)  +
+  theme(plot.margin = unit(c(0.05, 0.2, 0, 1), 'lines')) +
+  scale_x_continuous(limits = c(0, 100000), expan = expansion())   +
+  theme(legend.key.width = unit(1,"cm"),
+        #legend.text = element_text(size = 12),
+        legend.title = element_blank(),
+        strip.background = element_blank(), 
+        strip.text = element_text(hjust = 0.5, size = 12, face = 2),
+        axis.title.y = element_text(margin = unit(c(0, 4, 0, 0), "mm")),
+        panel.grid.major.x = element_line(color = "gray80"),
+        axis.title.x = element_text(margin = unit(c(4, 0, 0, 0), "mm"), size = 16), #+#,
+        axis.text.x = element_text(size = 14)) + #,
+        #axis.title = element_text(size = 12))+ 
+  guides(color = "none", linetype = "none", alpha = "none", shape = "none") 
+  
+svg("fig1_full.svg", width = 14, height = 4)
+print(dynamicflt_plt_full)
+dev.off()
 
 
 dynamicflt_plt1 <- ggplot(daten_longer_cumsum |>
@@ -262,6 +297,26 @@ daten_longer_cumsum <- daten_longer_cumsum |>
 tmin <- 90000
 tmax <- 92000
 
+p_full <- ggplot(daten_longer_cumsum, 
+                 aes(x=time)) + 
+  geom_ribbon(aes(ymin = lower_freq, ymax = cumsum_freq, fill= Genotype), alpha = 1) + 
+  facet_grid(rows =vars(Species_label)) + 
+  scale_fill_manual(values =  c("000"="gray80", "100"="#D9565CFF","010"="#F28A8AFF",
+                                "001"="brown4","110"="#1BB6AFFF","101"="#088BBEFF","011"="#172869FF","111"="gray20")) +
+  theme_minimal() +
+  ylab("cumulative frequency") +
+  ggtitle("time span: 0 - 1,000") +
+  theme(strip.text.y = element_text(size = 10, face = 2, hjust =0),
+        axis.title.y = element_text(margin = unit(c(0, 4, 0, 0), "mm")),
+        axis.title.x = element_text(margin = unit(c(4, 0, 0, 0), "mm")),
+        axis.text = element_text(size = 11),
+        axis.title = element_text(size = 12),
+        legend.text = element_text(size= 12),
+        legend.title = element_text(size = 13, face =2)
+  ) + 
+  guides(fill= guide_legend(override.aes = list(size = 10))) 
+
+
 p1 <- ggplot(daten_longer_cumsum |> 
                filter(time <=1000), 
        aes(x=time)) + 
@@ -360,15 +415,15 @@ if(p2plt & !p3plt){out <- p1 + p2  + plot_layout(nrow = 3, guides = 'collect')}
 if(p2plt & p3plt){out <- p1 + p2 + p3 + plot_layout(nrow = 3, guides = 'collect')}
 out
 
-pdf(outplt, width = 8, height = 12)
+svg("testout.svg", width = 8, height = 12)
 print(out)
 dev.off()
 
 if(exists("p1") & exists("p2") & exists("p3") & exists("dynamicflt_plt1") & exists("dynamicflt_plt1") & exists("dynamicflt_plt3")){
   Fig1_like <- (dynamicflt_plt1 + p1) / (dynamicflt_plt2 + p2)+ (dynamicflt_plt3 + p3) + 
-    plot_layout(guides = "collect") + plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")")
+    plot_layout(guides = "collect") #+ plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")")
   
-  pdf(outplt_extended, width = 10, height = 10)
+  svg('outextended.svg', width = 10, height = 10)
   print(Fig1_like)
   dev.off()
 }
@@ -376,7 +431,7 @@ if(exists("p1") & exists("p2") & exists("p3") & exists("dynamicflt_plt1") & exis
 # Generate Figure 1 
 if(CH1 == 0.1 & CP1 == 0.1 & CP2 == 3 & CH2 == 3 & phi == 0.5 & seed == 1600){
   Fig1 <- (dynamicflt_plt1 + p1) / (dynamicflt_plt2 + p2)+ (dynamicflt_plt3 + p3) + 
-    plot_layout(guides = "collect") + plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")")
+    plot_layout(guides = "collect") + plot_annotation(tag_levels = "i", tag_prefix = "(", tag_suffix = ")")
   
   pdf(paste0(plotdir,"/Fig1.pdf"), width = 10, height = 10)
   print(Fig1)
