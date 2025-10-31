@@ -83,27 +83,27 @@ datH_dat <- datH_dat |>
 
 datH_dat <- datH_dat |>
   mutate(combi_maintained = case_when(
-    R_alleles == 0 ~ "private S, ancestral S",
-    R_alleles == 1 & poly == 0 ~ "private: R, ancestral: S",
-    R_alleles == 1 & poly == 1 ~ "private: R/S, ancestral: S",
-    R_alleles == 2 & poly == 0 ~ "private: S, ancestral: R",
-    R_alleles == 2 & poly == 2 ~ "private: S, ancestral: R/S",
-    R_alleles == 3 & poly == 0 ~ "private: R, ancestral: R",
-    R_alleles == 3 & poly == 1 ~ "private: R/S, ancestral: R",
-    R_alleles == 3 & poly == 2 ~ "private: R, ancestral: R/S",
-    R_alleles == 3 & poly == 3 ~ "private: R/S, ancestral: R/S",
+    R_alleles == 0 ~ "private: S, shared: S",
+    R_alleles == 1 & poly == 0 ~ "private: R, shared: S",
+    R_alleles == 1 & poly == 1 ~ "private: R/S, shared: S",
+    R_alleles == 2 & poly == 0 ~ "private: S, shared: R",
+    R_alleles == 2 & poly == 2 ~ "private: S, shared: R/S",
+    R_alleles == 3 & poly == 0 ~ "private: R, shared: R",
+    R_alleles == 3 & poly == 1 ~ "private: R/S, shared: R",
+    R_alleles == 3 & poly == 2 ~ "private: R, shared: R/S",
+    R_alleles == 3 & poly == 3 ~ "private: R/S, shared: R/S",
     TRUE ~ "forgotten"
   )) |>
   mutate(combi_maintained = factor(combi_maintained, levels = 
-                                     c("private S, ancestral S",
-                                       "private: R, ancestral: S",
-                                       "private: R/S, ancestral: S",
-                                       "private: S, ancestral: R",
-                                       "private: R, ancestral: R",
-                                       "private: R/S, ancestral: R",                                      
-                                       "private: S, ancestral: R/S",                                       
-                                       "private: R, ancestral: R/S",
-                                       "private: R/S, ancestral: R/S")))
+                                     c("private: S, shared: S",
+                                       "private: R, shared: S",
+                                       "private: R/S, shared: S",
+                                       "private: S, shared: R/S",                                       
+                                       "private: S, shared: R",
+                                       "private: R, shared: R",
+                                       "private: R/S, shared: R",                                      
+                                       "private: R, shared: R/S",
+                                       "private: R/S, shared: R/S")))
 
 # Read the file for the pathogen
 datP <- lapply(to_readP, function(x){
@@ -189,13 +189,6 @@ rdensCP_std_plt <- ggplot(standard_caseH,  aes(x = CP1, color = as.factor(maxR),
   theme(plot.margin = margin(0,0,0,0, 'cm')) +
   xlab(bquote("Maximum cost of virulence"~Omega[P])) #+
 
-# pdf(paste0(main_figures,"/Fig_2a_std_case_rdensity_CH2_3_CP2_3_phi_0.5.pdf"), width = 7, height = 4.5)
-# print(rdens_std_plt)
-# dev.off()
-# 
-# pdf(paste0(main_figures,"/Fig_2c_std_case_rdensity_CH2_3_CP2_3_phi_0.5.pdf"), width = 7, height = 4.5)
-# print(rdensCP_std_plt)
-# dev.off()
 
 
 rpnt_std_plt <- ggplot(standard_caseH,  aes(x = CH1, CP1, color = as.factor(maxR))) +
@@ -212,10 +205,6 @@ rpnt_std_plt <- ggplot(standard_caseH,  aes(x = CH1, CP1, color = as.factor(maxR
   theme( axis.text = element_text(size = 14),
          axis.title.x = element_text(vjust = -0.75, size = 16),
          axis.title.y = element_text(size = 16))#+
-
-# pdf(paste0(main_figures,"/Fig_2b_std_case_rpnt_CH2_3_CP2_3_phi_0.5.pdf"), width = 7, height = 6)
-# print(rpnt_std_plt)
-# dev.off()
 
 
 outgg <- ggMarginal(rpnt_std_plt + 
@@ -266,7 +255,7 @@ Ralleles_summary <- caseH_phi %>%
   mutate(prop_y = n/sum(n)) |>
   mutate(label_raw = paste0(round(prop_y, digits=2)*100,"%")) |>
    mutate(label = case_when(
-    prop_y < 0.025 ~ "",
+    prop_y < 0.05 ~ "",
     TRUE ~ label_raw
   ))
     
@@ -274,7 +263,7 @@ Ralleles_summary <- caseH_phi %>%
     
 pt_phi_Ralleles_plt <- ggplot(caseH_phi, aes(x=CH1, y=CP1)) + 
   geom_point(aes(color=factor(R_alleles, levels = c(rev(as.character(0:3))))), show.legend=T, size = 0.3) +
-  facet_grid(rows= vars(Species_label), cols = vars(phi), labeller=label_bquote(cols = phi == .(as.character(phi)))) +
+  facet_grid(cols= vars(Species_label), rows = vars(phi), labeller=label_bquote(rows = phi == .(as.character(phi)))) +
   scale_color_manual(
     values = c("0" = "burlywood3", 
                 "1" = "#00A087FF",
@@ -290,63 +279,70 @@ pt_phi_Ralleles_plt <- ggplot(caseH_phi, aes(x=CH1, y=CP1)) +
   theme_bw() +
   labs(x = bquote(bold("maximum cost of resistance"~Omega[H])),
        y = bquote(bold("maximum cost of virulence"~ Omega[P]))) +
-  scale_x_continuous(limits = c(0, 0.3), expand = expansion(c(0,0), c(0,0.005)), breaks = c(0, 0.1, 0.2, 0.3)) +
-  scale_y_continuous(limits = c(0, 0.3), expand = expansion(c(0,0), c(0,0.005)), breaks = c(0, 0.1, 0.2, 0.3)) +
+  scale_x_continuous(limits = c(0, 0.3),
+                     labels = c(0, 0.1, 0.2, 0.3),
+                     expand = expansion(c(0,0), c(0,0.005)),
+                     breaks = c(0, 0.1, 0.2, 0.3)) +
+  scale_y_continuous(limits = c(0, 0.3),
+                     labels = c(0, 0.1, 0.2, 0.3),
+                     expand = expansion(c(0,0), c(0,0.005)),
+                     breaks = c(0, 0.1, 0.2, 0.3)) +
   guides(color = guide_legend(override.aes = list(size = 5, shape = 15))) +
-  theme(axis.title = element_text(size = 14, face = "bold"),
-        axis.text = element_text(size = 12),
+  theme(axis.title = element_text(size = 15, face = "bold"),
+        axis.text = element_text(size = 14),
         strip.background = element_rect(fill="white", color = "white"),
-        strip.text = element_text(size = 16, hjust = 0, margin = margin(t=4.4, r=4.4, b=4.4, l=4.4, "pt"), face  = 2))  +
+        strip.text = element_text(size = 16, hjust = 0.5, margin = margin(t=4.4, r=4.4, b=4.4, l=4.4, "pt")))  +
   theme(plot.margin = margin(0,0,0,0, 'cm'),
         panel.grid = element_blank(), 
         panel.spacing.x = unit(0.5, "cm"), 
-        panel.spacing.y = unit(0.5, "cm"))
+        panel.spacing.y = unit(0.5, "cm")) 
     
 f2 <- ggplot(caseH_phi , aes(x="", fill=factor(R_alleles, levels = c(rev(as.character(0:3)))))) + 
   geom_bar(stat = "count", position = "fill", show.legend = TRUE) + 
   labs(x = "Species", 
       y = "Proportion of 10,000 simulations") +
-      theme_bw() +
-      facet_grid(cols=vars(phi), rows = vars(Species_label),labeller=label_bquote(cols = phi == .(as.character(phi)) , rows = .(Species_label))) +
-      scale_fill_manual(
-        values = c("0" = "burlywood3", 
-                   "1" = "#00A087FF",
-                   "2" = "#64B5F6",
-                   "3" = "#3C5488FF"), 
-        labels = c("0" = "none", 
-                   "1" = "private only", 
-                   "2" = "ancestral only", 
-                   "3" = "both"), 
-        name = "", 
-        drop = FALSE  # Ensures unused factor levels are retained
-      ) +
-      labs(title = "", 
-           x = "", 
-           y = "Proportion out of\n10,000 simulations")+
-      guides(fill="none") + 
-      geom_text(data = Ralleles_summary , aes(y=prop_y, label = label, group = R_alleles), 
-                position = position_stack(vjust=0.5),  # Adjust label position
-                size = 6,
-                color = "white") +
-      theme(plot.margin = margin(0,0,0,0, 'cm'))  + 
-      theme(axis.title = element_text(size = 14), 
-            panel.grid = element_blank(),
-            axis.text.x = element_blank(),                 # 
-            axis.ticks.x = element_blank(), 
-            panel.spacing = unit(0.5, "cm"),                       # 
-            strip.background = element_blank(),
-            axis.title.y = element_text(margin = unit(c(0, 4, 0, 0), "mm"), size = 14),
-            axis.text.y = element_text(size = 12),
-            strip.text = element_text(size = 16, hjust = 0, margin = margin(t=4.4, r=4.4, b=4.4, l=4.4, "pt"), face  = 2),
-            title = element_text(size = 16, face = "bold")
-      ) +
-      theme(panel.border = element_blank()) 
+  theme_bw() +
+  facet_grid(rows = vars(phi), cols = vars(Species_label), labeller=label_bquote(rows = phi == .(as.character(phi)) , cols = .(Species_label))) +
+  scale_fill_manual(
+    values = c("0" = "burlywood3", 
+                "1" = "#00A087FF",
+                "2" = "#64B5F6",
+                "3" = "#3C5488FF"), 
+    labels = c("0" = "none", 
+                "1" = "private only", 
+                "2" = "ancestral only", 
+                "3" = "both"), 
+    name = "", 
+    drop = FALSE  # Ensures unused factor levels are retained
+  ) +
+  labs(title = "", 
+        x = "", 
+        y = "Proportion out of\n10,000 simulations")+
+  guides(fill="none") + 
+  geom_text(data = Ralleles_summary , aes(y=prop_y, label = label, group = R_alleles), 
+            position = position_stack(vjust=0.5),  # Adjust label position
+            size = 7,
+            color = "white") +
+  theme(plot.margin = margin(0,0,0,0, 'cm'))  + 
+  theme(strip.text = element_text(size = 16, hjust = 0.5, margin = margin(t=4.4, r=4.4, b=4.4, l=4.4, "pt")), 
+        axis.text = element_text(size = 14),
+        axis.title.x = element_text(vjust = -0.75, size = 15),
+        axis.title.y = element_text(margin = unit(c(0, 4, 0, 0), "mm"), size = 15),
+        panel.grid = element_blank(),
+        panel.border = element_blank(),  # Removes the box around the facets
+        axis.ticks.x = element_blank(),
+        strip.background = element_blank(),
+        title = element_text(face = "bold", size = 16),
+        panel.spacing.x = unit(0, "cm"),
+        panel.spacing.y = unit(0.5, "cm"),
+        panel.background = element_rect(fill = "gray60")) +
+  theme(legend.text = element_text(size = 14))
 
 
 
 # Summarize the R_alleles across all simulations
 # This summary will be used to add the proportions to the generated barplot
-# Note now label will be added if the proportion is < 2.5%
+# Note now label will be added if the proportion is < 5%
 R_alleles_summary <- datH_dat %>% 
   group_by(phi_label, Species_label, R_alleles = factor(R_alleles, levels = rev(as.character(0:3)))) %>% 
   tally()  %>%
@@ -355,7 +351,7 @@ R_alleles_summary <- datH_dat %>%
   mutate(label_raw = paste0(round(prop_y, digits=2)*100,"%")) |>
   # If the proportion is smaller than 2.5% then make the label empty
   mutate(label = case_when(
-    prop_y < 0.025 ~ "",
+    prop_y < 0.05 ~ "",
     TRUE ~ label_raw
   ))
 
@@ -367,7 +363,7 @@ R_alleles_acrossall_plt <- ggplot(datH_dat, aes(x="", fill= factor(R_alleles, le
   labs(x = "Species", 
        y = "Proportion") +
   theme_minimal() +
-  facet_grid(cols = vars(phi_label), rows = vars(Species_label), labeller=labeller(phi_label =label_parsed)) +
+  facet_grid(rows = vars(phi_label), cols = vars(Species_label), labeller=labeller(phi_label =label_parsed)) +
   scale_fill_manual(
     values = c("0" = "burlywood3", 
                "1" = "#00A087FF",
@@ -383,48 +379,38 @@ R_alleles_acrossall_plt <- ggplot(datH_dat, aes(x="", fill= factor(R_alleles, le
   labs(x = "", 
        y = "Proportion out of\n90,000 simulations") +
   theme_bw() +
-  theme(strip.text = element_text(size = 16, hjust = 0, margin = margin(t=4.4, r=4.4, b=4.4, l=4.4, "pt"), face  = 2), 
-        axis.text = element_text(size = 12),
-        axis.title.x = element_text(vjust = -0.75, size = 14),
-        axis.title.y = element_text(margin = unit(c(0, 4, 0, 0), "mm"), size = 14),
+  theme(strip.text = element_text(size = 16, hjust = 0.5, margin = margin(t=4.4, r=4.4, b=4.4, l=4.4, "pt")), 
+        axis.text = element_text(size = 14),
+        axis.title.x = element_text(vjust = -0.75, size = 15),
+        axis.title.y = element_text(margin = unit(c(0, 4, 0, 0), "mm"), size = 15),
         panel.grid = element_blank(),
         panel.border = element_blank(),  # Removes the box around the facets
         axis.ticks.x = element_blank(),
         strip.background = element_blank(),
         title = element_text(face = "bold", size = 16),
-        panel.spacing = unit(0.5, "cm")) +
+        panel.spacing.y = unit(0.5, "cm"),
+        panel.spacing.x = unit(0, "cm"),
+        panel.background = element_rect(fill = "gray60")) +
+  #strip.background = element_rect(fill = "white", colour = "white")) +
+  ggtitle("Across cost function shapes\nand maximum costs") +
+  theme(legend.text = element_text(size = 13)) +
   #strip.background = element_rect(fill = "white", colour = "white")) +
   geom_text(data = R_alleles_summary, aes(y=prop_y, label = label), 
             position = position_stack(vjust=0.5),  # Adjust label position
-            size = 6,
-            color = "white") +
-  ggtitle("Across cost function shapes\nand maximum costs") +
-  theme(legend.text = element_text(size = 13))
+            size = 7,
+            color = "white")
 
 
 legend_plot <- cowplot::get_legend(R_alleles_acrossall_plt) 
 
 
-layout_design <- c(
-  patchwork::area(t = 1, l = 1, b = 1, r = 1),   # f2
-  patchwork::area(t = 1, l = 2, b = 1, r = 2),   # pt_phi_Ralleles_plt
-  patchwork::area(t = 2, l = 1, b = 2, r = 1),   # R_alleles_acrossall_plt
-  patchwork::area(t = 2, l = 2, b = 2, r = 2)    # legend
-)
-
-Fig2_new <- (f2 + theme(legend.position = "none") +
-               pt_phi_Ralleles_plt + 
-               theme(plot.margin = margin(c(8,0,0,0)),
-                     legend.position = "none") +
-               R_alleles_acrossall_plt + 
-               theme(plot.margin = margin(c(8,0,0,0)),
-                     plot.title = element_text(face = 2, margin = margin(b = -2, unit = "pt")),
-                     legend.position = "none") +
-               wrap_elements(legend_plot)) +
+Fig2_new <- pt_phi_Ralleles_plt + theme(legend.position = "none") + ggtitle("Effect of maximum costs\nfor fixed shapes") + 
+  plot_spacer() + 
+  f2 + theme(legend.position = "none") +  ggtitle("Summary maximum\ncosts fixed shapes") +
+  R_alleles_acrossall_plt +
   plot_layout(
-    design = layout_design,
-    widths = c(1, 2),    # 1/3 : 2/3 column ratio
-    heights = c(1, 1)    # equal row heights
+    widths = c(2, 0.01, 1, 1),    # 1/3 : 2/3 column ratio
+    heights = c(1)    # equal row heights
   ) +
   plot_annotation(
     tag_levels = list(c("(a)", "(b)", "(c)", "")),
@@ -438,7 +424,9 @@ Fig2_new <- (f2 + theme(legend.position = "none") +
 
 
 
-pdf(paste0(main_figures,"/Fig_2_ralleles.pdf"), width = 14, height = 10)
+
+
+pdf(paste0(main_figures,"/Fig_2_ralleles.pdf"), width = 15, height = 9)
 print(Fig2_new)
 dev.off()
 
@@ -452,7 +440,7 @@ poly_summary <- caseH_phi %>%
   mutate(prop_y = n/sum(n)) |>
   mutate(label_raw = paste0(round(prop_y, digits=2)*100,"%")) |>
   mutate(label = case_when(
-    prop_y < 0.025 ~ "",
+    prop_y < 0.05 ~ "",
     TRUE ~ label_raw
   ))
     
@@ -460,7 +448,7 @@ poly_summary <- caseH_phi %>%
     
 pt_phi_poly_plt <- ggplot(caseH_phi, aes(x=CH1, y=CP1)) + 
   geom_point(aes(color=factor(poly, levels = rev(as.character(0:3)))), show.legend=T, size = 0.3) +
-  facet_grid(rows= vars(Species_label), cols = vars(phi), labeller=label_bquote(cols = phi == .(as.character(phi)))) +
+  facet_grid(cols= vars(Species_label), rows = vars(phi), labeller=label_bquote(rows = phi == .(as.character(phi)))) +
   scale_color_manual(values = c("0" = "burlywood3", 
                                 "1" = "#00A087FF",
                                 "2" = "#64B5F6",
@@ -471,28 +459,28 @@ pt_phi_poly_plt <- ggplot(caseH_phi, aes(x=CH1, y=CP1)) +
                                 "3" = "both"), 
     name = "Maintained polymorphism", 
     drop = FALSE  # Ensures unused factor levels are retained
-  ) +
+  )  +
   theme_bw() +
   labs(x = bquote(bold("maximum cost of resistance"~Omega[H])),
        y = bquote(bold("maximum cost of virulence"~ Omega[P]))) +
-  scale_x_continuous(limits = c(0, 0.3), expand = expansion(c(0,0), c(0,0.005)), breaks = c(0, 0.1, 0.2, 0.3)) +
-  scale_y_continuous(limits = c(0, 0.3), expand = expansion(c(0,0), c(0,0.005)), breaks = c(0, 0.1, 0.2, 0.3)) +
+  scale_x_continuous(limits = c(0, 0.3), labels = c(0, 0.1, 0.2, 0.3), expand = expansion(c(0,0), c(0,0.005)), breaks = c(0, 0.1, 0.2, 0.3)) +
+  scale_y_continuous(limits = c(0, 0.3), labels = c(0, 0.1, 0.2, 0.3), expand = expansion(c(0,0), c(0,0.005)), breaks = c(0, 0.1, 0.2, 0.3)) +
   guides(color = guide_legend(override.aes = list(size = 5, shape = 15))) +
-  theme(axis.title = element_text(size = 14, face = "bold"),
-        axis.text = element_text(size = 12),
+  theme(axis.title = element_text(size = 15, face = "bold"),
+        axis.text = element_text(size = 14),
         strip.background = element_rect(fill="white", color = "white"),
-        strip.text = element_text(size = 16, hjust = 0, margin = margin(t=4.4, r=4.4, b=4.4, l=4.4, "pt"), face  = 2))  +
+        strip.text = element_text(size = 16, hjust = 0.5, margin = margin(t=4.4, r=4.4, b=4.4, l=4.4, "pt")))  +
   theme(plot.margin = margin(0,0,0,0, 'cm'),
         panel.grid = element_blank(), 
         panel.spacing.x = unit(0.5, "cm"), 
-        panel.spacing.y = unit(0.5, "cm"))
+        panel.spacing.y = unit(0.5, "cm")) 
     
 fpoly <- ggplot(caseH_phi , aes(x="", fill=factor(poly, levels = rev(as.character(0:3))))) +
   geom_bar(stat = "count", position = "fill", show.legend = TRUE) +
   labs(x = "Species",
        y = "Proportion of 10,000 simulations") +
   theme_bw() +
-  facet_grid(cols=vars(phi), rows = vars(Species_label),labeller=label_bquote(cols = phi == .(as.character(phi)) , rows = .(Species_label))) +
+  facet_grid(rows=vars(phi), cols = vars(Species_label),labeller=label_bquote(rows = phi == .(as.character(phi)) , cols = .(Species_label))) +
   scale_fill_manual(
     values = c("0" = "burlywood3",
                "1" = "#00A087FF",
@@ -513,18 +501,20 @@ fpoly <- ggplot(caseH_phi , aes(x="", fill=factor(poly, levels = rev(as.characte
             size = 6,
             color = "white") +
   theme(plot.margin = margin(0,0,0,0, 'cm'))  + 
-  theme(axis.title = element_text(size = 14), 
+  theme(strip.text = element_text(size = 16, hjust = 0.5, margin = margin(t=4.4, r=4.4, b=4.4, l=4.4, "pt")), 
+        axis.text = element_text(size = 14),
+        axis.title.x = element_text(vjust = -0.75, size = 15),
+        axis.title.y = element_text(margin = unit(c(0, 4, 0, 0), "mm"), size = 15),
         panel.grid = element_blank(),
-        axis.text.x = element_blank(), 
-        axis.ticks.x = element_blank(), 
-        panel.spacing = unit(0.5, "cm"), 
+        panel.border = element_blank(),  # Removes the box around the facets
+        axis.ticks.x = element_blank(),
         strip.background = element_blank(),
-        axis.title.y = element_text(margin = unit(c(0, 4, 0, 0), "mm"), size = 14),
-        axis.text.y = element_text(size = 12),
-        strip.text = element_text(size = 16, hjust = 0, margin = margin(t=4.4, r=4.4, b=4.4, l=4.4, "pt"), face  = 2),
-        title = element_text(size = 16, face = "bold")
-      ) +
-  theme(panel.border = element_blank()) 
+        title = element_text(face = "bold", size = 16),
+        panel.spacing.x = unit(0, "cm"),
+        panel.spacing.y = unit(0.5, "cm"),
+        panel.background = element_rect(fill = "gray60")) +
+  theme(legend.text = element_text(size = 14))
+
   
 # Summarize the polymorphism data
 # This is the summary to calcuate the proportions for each category
@@ -535,7 +525,7 @@ npoly_summary <- datH_dat %>%
   mutate(prop_y = n/sum(n)) |>
   mutate(label_raw = paste0(round(prop_y, digits=2)*100,"%")) |>
   mutate(label = case_when(
-    prop_y < 0.025 ~ "",
+    prop_y < 0.05 ~ "",
     TRUE ~ label_raw
   ))
 
@@ -545,7 +535,7 @@ polyprops_acrossall_plt <- ggplot(datH_dat, aes(x="", fill= factor(poly, levels 
   labs(x = "Species", 
        y = "Proportion") +
   theme_minimal() +
-  facet_grid(cols = vars(phi_label), rows = vars(Species_label), labeller=labeller(phi_label =label_parsed)) +
+  facet_grid(rows = vars(phi_label), cols = vars(Species_label), labeller=labeller(phi_label =label_parsed)) +
   scale_fill_manual(
     values = c("0" = "burlywood3", 
                "1" = "#00A087FF",
@@ -555,57 +545,44 @@ polyprops_acrossall_plt <- ggplot(datH_dat, aes(x="", fill= factor(poly, levels 
                "1" = "private only", 
                "2" = "ancestral only", 
                "3" = "both"), 
-    name = "Maintained polymorphism", 
+    name = "Maintained\npolymorphism", 
     drop = FALSE  # Ensures unused factor levels are retained
   ) +
   labs(x = "", 
        y = "Proportion out of\n90,000 simulations") +
   theme_bw() +
-  theme(strip.text = element_text(size = 16, hjust = 0, margin = margin(t=4.4, r=4.4, b=4.4, l=4.4, "pt"), face  = 2), 
-        axis.text = element_text(size = 12),
-        axis.title.x = element_text(vjust = -0.75, size = 14),
-        axis.title.y = element_text(margin = unit(c(0, 4, 0, 0), "mm"), size = 14),
+  theme(strip.text = element_text(size = 16, hjust = 0.5, margin = margin(t=4.4, r=4.4, b=4.4, l=4.4, "pt")), 
+        axis.text = element_text(size = 14),
+        axis.title.x = element_text(vjust = -0.75, size = 15),
+        axis.title.y = element_text(margin = unit(c(0, 4, 0, 0), "mm"), size = 15),
         panel.grid = element_blank(),
         panel.border = element_blank(),  # Removes the box around the facets
         axis.ticks.x = element_blank(),
         strip.background = element_blank(),
         title = element_text(face = "bold", size = 16),
-        panel.spacing = unit(0.5, "cm")) +
+        panel.spacing.y = unit(0.5, "cm"),
+        panel.spacing.x = unit(0, "cm"),
+        panel.background = element_rect(fill = "gray60")) +
   #strip.background = element_rect(fill = "white", colour = "white")) +
+  ggtitle("Across cost function shapes\nand maximum costs") +
+  theme(legend.text = element_text(size = 13)) +
   geom_text(data = npoly_summary, aes(y=prop_y, label = label), 
             position = position_stack(vjust=0.5),  # Adjust label position
             size = 6,
-            color = "white") +
-  ggtitle("Across cost function shapes\nand maximum costs") +
-  theme(legend.text = element_text(size = 13))
+            color = "white") 
 
 
-legend_polyplot <- cowplot::get_legend(polyprops_acrossall_plt) 
 
-
-layout_design <- c(
-  patchwork::area(t = 1, l = 1, b = 1, r = 1), 
-  patchwork::area(t = 1, l = 2, b = 1, r = 2),
-  patchwork::area(t = 2, l = 1, b = 2, r = 1),
-  patchwork::area(t = 2, l = 2, b = 2, r = 2)
-)
-
-Fig3_new <- (fpoly + theme(legend.position = "none") +
-               pt_phi_poly_plt + 
-               theme(plot.margin = margin(c(8,0,0,0)),
-                     legend.position = "none") +
-               polyprops_acrossall_plt + 
-               theme(plot.margin = margin(c(8,0,0,0)),
-                     plot.title = element_text(face = 2, margin = margin(b = -2, unit = "pt")),
-                     legend.position = "none") +
-               wrap_elements(legend_plot)) +
+Fig3_new <- pt_phi_poly_plt + theme(legend.position = "none") + ggtitle("Effect of maximum costs\nfor fixed shapes") +
+  plot_spacer() +
+  fpoly + theme(legend.position = "none") +  ggtitle("Summary maximum\ncosts fixed shapes")  +
+  polyprops_acrossall_plt +
   plot_layout(
-    design = layout_design,
-    widths = c(1, 2),    # 1/3 : 2/3 column ratio
-    heights = c(1, 1)    # equal row heights
+    widths = c(2, 0.01,  1, 1),    # 1/3 : 2/3 column ratio
+    heights = c(1)    # equal row heights
   ) +
   plot_annotation(
-    tag_levels = list(c("(a)", "(b)", "(c)", "")),
+    tag_levels = list(c("(a)", "(b)", "(c)")),
     tag_prefix = "",
     tag_suffix = ""
   ) &
@@ -615,15 +592,129 @@ Fig3_new <- (fpoly + theme(legend.position = "none") +
   )
 
 
-pdf(paste0(main_figures,"/Fig_3_poly.pdf"), width = 14, height = 10)
+pdf(paste0(main_figures,"/Fig_3_poly.pdf"), width = 15, height = 9)
 print(Fig3_new)
 dev.off()
 
 
+
+# Figure 4 ----------------------------------------------------------------
+
+scombined <- bind_rows(datH_dat, datP_dat)
+
+## Summaries the ranges for the hosts across all simulations
+nrange_summary <- scombined %>% 
+  group_by(phi, Species, range_summary) %>% 
+  tally()  %>%
+  group_by(phi, Species) |>
+  mutate(prop_y = n/sum(n)) |>
+  mutate(Species_label = case_when(
+    Species == "H1" ~ "Host H",
+    Species == "H2" ~ "Host M",
+    Species == "P" ~ "Pathogen"
+  ))|>
+  mutate(label_raw = paste0(round(prop_y, digits=2)*100,"%")) |>
+  mutate(label = case_when(
+    prop_y < 0.05 ~ "",
+    TRUE ~ label_raw
+  ))
+
+
+
+
+allrangebarplt <- ggplot(scombined |> mutate(Species_label = case_when(
+  Species == "H1" ~ "Host H",
+  Species == "H2" ~ "Host M",
+  Species == "P" ~ "Pathogen"
+)), aes(x="", fill=as.factor(range_summary))) + 
+  geom_bar(stat = "count", position = "fill", show.legend = TRUE) + 
+  labs(x = "", 
+       y = "Proportion") +
+  theme_minimal() +
+  facet_grid(rows=vars(phi), cols = vars(Species_label), labeller=label_bquote(rows = phi == .(as.character(phi)) , cols = .(Species_label))) +
+  scale_fill_manual(values = c("1" = "#AFB42B",
+                               "2" = "#FFA726FF",
+                               "3" = "#F57C00FF",
+                               "4" = "#FF95A8FF",
+                               "5" = "#EC407AFF",
+                               "6" = "#C2185BFF",
+                               "7" = "#8A4198FF",
+                               "8" = "mediumorchid3",
+                               "9" = "lightblue",
+                               "10" = "darkseagreen2",
+                               "11" = "limegreen",
+                               "12" = "#008EA0FF",
+                               "13" = "darkturquoise",
+                               "14" = "#1A5355FF",
+                               "15" = "black"),
+                    labels = c("1" = "0",
+                               "2" = "1",
+                               "3" = "0 + 1",
+                               "4" = "2",
+                               "5" = "0 + 2",
+                               "6" = "1 + 2",
+                               "7" = "0 + 1 +2",
+                               "8" = "3",
+                               "9" = "0 + 3",
+                               "10" = "1 + 3",
+                               "11" = "0 + 1 +3",
+                               "12" = "2 + 3",
+                               "13" = "0 + 2 + 3",
+                               "14" = "1 + 2 + 3",
+                               "15" = "0 + 1 + 2  + 3"), drop = FALSE, name = "# of resistance (R) alleles\nor virulence (V) alleles/\n in maintained\nhaplotypes") +
+  labs(title = "", 
+       x = "", 
+       y = "Proportion out of\n90,000 simulations") +
+  theme_bw() +
+  geom_text(data = nrange_summary , aes(y=prop_y, label = label, group = range_summary), 
+            position = position_stack(vjust=0.5),  # Adjust label position
+            size = 6,
+            color = "white")   +
+  theme(strip.text = element_text(size = 16, hjust = 0.5, margin = margin(t=4.4, r=4.4, b=4.4, l=4.4, "pt")), 
+        axis.text = element_text(size = 12),
+        axis.title.x = element_text(vjust = -0.75, size = 15),
+        axis.title.y = element_text(margin = unit(c(0, 4, 0, 0), "mm"), size = 15),
+        panel.grid = element_blank(),
+        axis.ticks.x = element_blank(),
+        title = element_text(face = "bold", size = 16),
+        panel.spacing.x = unit(0, "cm"),
+        panel.spacing.y = unit(0.5, "cm")) 
+
+allrangebarplt <- tag_facet(allrangebarplt, x = 0.5, y = 1.05, size = 4, hjust = -0.5, vjust = 0) +
+  theme(strip.text = element_text(size = 16, hjust = 0.5, margin = margin(t=4.4, r=4.4, b=4.4, l=4.4, "pt"), face  = 2), 
+        axis.text = element_text(size = 12),
+        axis.title.x = element_text(vjust = -0.75, size = 14),
+        axis.title.y = element_text(size = 14),
+        panel.grid = element_blank(),
+        #strip.background = element_rect(fill = "gray90", colour = "gray40"),
+        panel.background = element_rect(fill = "gray60"),
+        panel.border = element_blank()) +
+  guides(fill = guide_legend(ncol = 2))
+
+# note default strip.background for theme_bw has fill = "gray85" and color = "gray20"
+
+pdf(paste0(main_figures,"/Fig_4_ranges_across_all_shapes.pdf"), width = 8, height = 12)
+print(allrangebarplt)
+dev.off()
+
+##  Supplementary figure
+
+
+maintained_summary <- caseH_phi %>% 
+  group_by(phi, Species_label, combi_maintained) %>% 
+  tally()  %>%
+  group_by(phi, Species_label) |>
+  mutate(prop_y = n/sum(n)) |>
+  mutate(label_raw = paste0(round(prop_y, digits=2)*100,"%")) |>
+  mutate(label = case_when(
+    prop_y < 0.05 ~ "",
+    TRUE ~ label_raw
+  ))
+
     
-maintained_alleles_standard <- ggplot(datH_dat |> filter(CH2 == 3 & CP2==3), aes(x=CH1, y=CP1)) + 
-      geom_point(aes(color=as.factor(combi_maintained)), show.legend=T, size = 0.05) + 
-      facet_grid(rows= vars(Species_label), cols = vars(phi), labeller=label_bquote(cols = phi == .(as.character(phi)))) +
+maintained_alleles_standard <- ggplot(caseH_phi, aes(x=CH1, y=CP1)) + 
+      geom_point(aes(color= combi_maintained), show.legend=T, size = 0.05) + 
+      facet_grid(cols = vars(Species_label), rows = vars(phi), labeller=label_bquote(rows = phi == .(as.character(phi)))) +
       theme_bw() + 
       scale_color_manual( values = c("gray40", "mediumvioletred","#925E9FFF","mediumseagreen","#FDAF91FF","#AD002AFF","cadetblue1","#0099B4FF","#00468BFF","lightyellow"),
                           name = "maintained alleles\nin population",drop =FALSE) +
@@ -631,20 +722,57 @@ maintained_alleles_standard <- ggplot(datH_dat |> filter(CH2 == 3 & CP2==3), aes
       labs(x = bquote(bold("maximum cost of resistance "*Omega[H])), 
            y = bquote(bold("maximum cost of virulence "*Omega[P]))) +
       theme_bw() +
-      theme(strip.text = element_text(size = 16, hjust = 0, margin = margin(t=4.4, r=4.4, b=4.4, l=4.4, "pt"), face  = 2), 
+      theme(strip.text = element_text(size = 16, hjust = 0, margin = margin(t=4.4, r=4.4, b=4.4, l=4.4, "pt")), 
             legend.text = element_text(size = 12),
             legend.title = element_text(size = 14, face = 2),
-            axis.text = element_text(size = 12),
-            axis.title.x = element_text(vjust = -0.75, size = 14),
-            axis.title.y = element_text(size = 14),
+            axis.text = element_text(size = 14),
+            axis.title.x = element_text(vjust = -0.75, size = 15),
+            axis.title.y = element_text(size = 15),
             panel.grid = element_blank(),
             strip.background = element_rect(fill = "white", colour = "white"),
-            panel.spacing = unit(0.7, "cm")) 
-    
-    
-pdf(paste0(supplementary_figures,"/Supp_maintained_alleles_CH2_",CH2_value,"_CP2_",CP2_value,".pdf"), width = 12, height = 4.5)
-  print(maintained_alleles_standard)
-dev.off()
+            panel.spacing = unit(0.5, "cm"),
+            legend.position = "none")  +
+  scale_x_continuous(limits = c(0, 0.3),
+                     labels = c(0, 0.1, 0.2, 0.3),
+                     expand = expansion(c(0,0), c(0,0.005)),
+                     breaks = c(0, 0.1, 0.2, 0.3)) +
+  scale_y_continuous(limits = c(0, 0.3),
+                     labels = c(0, 0.1, 0.2, 0.3),
+                     expand = expansion(c(0,0), c(0,0.005)),
+                     breaks = c(0, 0.1, 0.2, 0.3)) 
+
+
+f_combi <- ggplot(caseH_phi , aes(x="", fill=combi_maintained)) + 
+  geom_bar(stat = "count", position = "fill", show.legend = TRUE) + 
+  labs(x = "Species", 
+       y = "Proportion of 10,000 simulations") +
+  theme_bw() +
+  facet_grid(rows = vars(phi), cols = vars(Species_label), labeller=label_bquote(rows = phi == .(as.character(phi)) , cols = .(Species_label))) + 
+  scale_fill_manual( values = c("gray40", "mediumvioletred","#925E9FFF","mediumseagreen","#FDAF91FF","#AD002AFF","cadetblue1","#0099B4FF","#00468BFF","lightyellow"),name = "maintained alleles\nin population",drop =FALSE) +
+  labs(title = "", 
+       x = "", 
+       y = "Proportion out of\n10,000 simulations")+
+  guides(fill="none") + 
+  geom_text(data = maintained_summary , aes(y=prop_y, label = label, group = combi_maintained), 
+            position = position_stack(vjust=0.5),  # Adjust label position
+            size = 5,
+            color = "white") +
+  theme(plot.margin = margin(0,0,0,0, 'cm'))  + 
+  theme(strip.text = element_text(size = 16, hjust = 0.5, margin = margin(t=4.4, r=4.4, b=4.4, l=4.4, "pt")), 
+        axis.text = element_text(size = 14),
+        axis.title.x = element_text(vjust = -0.75, size = 15),
+        axis.title.y = element_text(margin = unit(c(0, 4, 0, 0), "mm"), size = 15),
+        panel.grid = element_blank(),
+        panel.border = element_blank(),  # Removes the box around the facets
+        axis.ticks.x = element_blank(),
+        strip.background = element_blank(),
+        title = element_text(face = "bold", size = 16),
+        panel.spacing.x = unit(0, "cm"),
+        panel.spacing.y = unit(0.5, "cm"),
+        panel.background = element_rect(fill = "gray60")) +
+  theme(legend.text = element_text(size = 14))
+
+
     
 
 # Summary for the maintained alleles
@@ -655,17 +783,17 @@ combi_summary <- datH_dat %>%
   mutate(prop_y = n/sum(n)) |>
   mutate(label_raw = paste0(round(prop_y, digits=2)*100,"%")) |>
   mutate(label = case_when(
-    prop_y < 0.025 ~ "",
+    prop_y < 0.05 ~ "",
     TRUE ~ label_raw
   ))
 
 
-Rcombi_acrossall_plt <- ggplot(datH_dat, aes(x="", fill= factor(combi_maintained))) + 
-  geom_bar(stat = "count", position = "fill", show.legend = TRUE, color = "white", linewidth = 0.1) + 
+combimaintained_acrossall_plt <- ggplot(datH_dat, aes(x="", fill= factor(combi_maintained))) + 
+  geom_bar(stat = "count", position = "fill", show.legend = TRUE) + 
   labs(x = "Species", 
        y = "Proportion") +
   theme_minimal() +
-  facet_grid(cols = vars(phi_label), rows =vars(Species_label),labeller=labeller(phi_label =label_parsed)) +
+  facet_grid(rows = vars(phi_label), cols =vars(Species_label), labeller=labeller(phi_label =label_parsed)) +
   scale_fill_manual(
     values = c("gray40", "mediumvioletred","#925E9FFF","mediumseagreen","#FDAF91FF","#AD002AFF","cadetblue1","#0099B4FF","#00468BFF","lightyellow"),
     name = "maintained alleles\nin population",
@@ -674,23 +802,47 @@ Rcombi_acrossall_plt <- ggplot(datH_dat, aes(x="", fill= factor(combi_maintained
   labs(x = "", 
        y = "Proportion of\n90,000 simulations") +
   theme_bw() +
-  theme(strip.text = element_text(size = 16, hjust = 0, margin = margin(t=4.4, r=4.4, b=4.4, l=4.4, "pt"), face  = 2), 
-        legend.text = element_text(size = 12),
-        legend.title = element_text(size = 14, face = 2),
-        axis.text.y = element_text(size = 14),
-        axis.title.x = element_text(vjust = -0.75, size = 12),
-        axis.title.y = element_text(size = 14, face = "bold"),
-        strip.background = element_blank(),
-        axis.ticks.x = element_blank(),
-        panel.grid = element_blank(),
-        panel.border = element_blank()) +
   geom_text(data = combi_summary, aes(y=prop_y, label = label, group = combi_maintained), 
             position = position_stack(vjust=0.5),  # Adjust label position
-            size = 6,
-            color = "white")
+            size = 5,
+            color = "white") +
+  theme(strip.text = element_text(size = 16, hjust = 0.5, margin = margin(t=4.4, r=4.4, b=4.4, l=4.4, "pt")), 
+        axis.text = element_text(size = 14),
+        axis.title.x = element_text(vjust = -0.75, size = 15),
+        axis.title.y = element_text(margin = unit(c(0, 4, 0, 0), "mm"), size = 15),
+        panel.grid = element_blank(),
+        panel.border = element_blank(),  # Removes the box around the facets
+        axis.ticks.x = element_blank(),
+        strip.background = element_blank(),
+        title = element_text(face = "bold", size = 16),
+        panel.spacing.y = unit(0.5, "cm"),
+        panel.spacing.x = unit(0, "cm"),
+        panel.background = element_rect(fill = "gray60")) +
+  #strip.background = element_rect(fill = "white", colour = "white")) +
+  ggtitle("Across cost function shapes\nand maximum costs") +
+  theme(legend.text = element_text(size = 13)) 
 
-pdf(paste0(supplementary_figures,"/Additional_alleles_maintained_acrossshapes.pdf"), width = 10, height = 5)
-print(Rcombi_acrossall_plt)
+
+SFig4_new <- maintained_alleles_standard + theme(legend.position = "none") + ggtitle("Effect of maximum costs\nfor fixed shapes") +
+  plot_spacer() +
+  f_combi + theme(legend.position = "none") +  ggtitle("Summary maximum\ncosts fixed shapes")  +
+  combimaintained_acrossall_plt +
+  plot_layout(
+    widths = c(2, 0.01,  1, 1),    # 1/3 : 2/3 column ratio
+    heights = c(1)    # equal row heights
+  ) +
+  plot_annotation(
+    tag_levels = list(c("(a)", "(b)", "(c)")),
+    tag_prefix = "",
+    tag_suffix = ""
+  ) &
+  theme(
+    plot.tag = element_text(face = 2, size = 14),
+    plot.title = element_text(face = 2, size = 16)
+  )
+
+pdf(paste0(supplementary_figures,"/S4_alleles_maintained.pdf"), width = 15, height = 9)
+print(SFig4_new)
 dev.off()
 
 # Now make a more detailed version of the plot. First generate the corresponding summary
@@ -711,7 +863,7 @@ combi_summary_precise <- datH_dat %>%
 # Generate the plot
 Rcombi_costcombi_plt_hostM <- ggplot(datH_dat |> mutate(phi = factor(phi)) |> filter(Species_label == "Host M"), aes(x=phi, 
                                              fill= factor(combi_maintained))) + 
-  geom_bar(stat = "count", position = "fill", show.legend = TRUE, color = "white", linewidth = 0.1) + 
+  geom_bar(stat = "count", position = "fill", show.legend = TRUE) + 
   labs(x = "Proportion of host H", 
        y = "Proportion") +
   theme_minimal() +
@@ -744,13 +896,9 @@ Rcombi_costcombi_plt_hostM <- ggplot(datH_dat |> mutate(phi = factor(phi)) |> fi
   #scale_x_discrete(labels = c("Host H.phi == 0.5" = "Host H", "Host M.phi == 0.5" = "Host M"))
 
 
-pdf(paste0(supplementary_figures,"/alleles_maintained_eachcombi_hostM.pdf"), width = 9, height = 4.5)
-print(Rcombi_costcombi_plt_hostM)
-dev.off()
-
 Rcombi_costcombi_plt_hostH <- ggplot(datH_dat |> filter(Species_label == "Host H"), aes(x=as.factor(phi), 
                                                                                         fill= factor(combi_maintained))) + 
-  geom_bar(stat = "count", position = "fill", show.legend = TRUE, color = "white", linewidth = 0.1) + 
+  geom_bar(stat = "count", position = "fill", show.legend = TRUE) + 
   labs(x = "Proportion of host H", 
        y = "Proportion") +
   theme_minimal() +
@@ -781,11 +929,25 @@ Rcombi_costcombi_plt_hostH <- ggplot(datH_dat |> filter(Species_label == "Host H
   ggtitle("Host species H")#+
 #scale_x_discrete(labels = c("Host H.phi == 0.5" = "Host H", "Host M.phi == 0.5" = "Host M"))
 
+SFig5_new <- Rcombi_costcombi_plt_hostH + theme(legend.position = "none") +
+  Rcombi_costcombi_plt_hostM  +
+  plot_layout(
+    widths = c(1, 1),    # 1/3 : 2/3 column ratio
+    guides = "collect"
+  ) +
+  plot_annotation(
+    tag_levels = list(c("(a)", "(b)")),
+    tag_prefix = "",
+    tag_suffix = ""
+  ) &
+  theme(
+    plot.tag = element_text(face = 2, size = 14),
+    plot.title = element_text(face = 2, size = 16)
+  )
 
-pdf(paste0(supplementary_figures,"/alleles_maintained_eachcombi_hostH.pdf"), width = 9, height = 4.5)
-print(Rcombi_costcombi_plt_hostH)
+pdf(paste0(supplementary_figures,"/SFig5_maintained_detail.pdf"),width = 15, height=8)
+print(SFig5_new)
 dev.off()
-
 
 
 # Supplementary Figure 7 ----------------------------------------------------------------
@@ -845,101 +1007,4 @@ dev.off()
   
 
 
-# Figure 4 ----------------------------------------------------------------
-
-scombined <- bind_rows(datH_dat, datP_dat)
-
-## Summaries the ranges for the hosts across all simulations
-nrange_summary <- scombined %>% 
-  group_by(phi, Species, range_summary) %>% 
-  tally()  %>%
-  group_by(phi, Species) |>
-  mutate(prop_y = n/sum(n)) |>
-  mutate(Species_label = case_when(
-    Species == "H1" ~ "Host H",
-    Species == "H2" ~ "Host M",
-    Species == "P" ~ "Pathogen"
-  ))|>
-  mutate(label_raw = paste0(round(prop_y, digits=2)*100,"%")) |>
-  mutate(label = case_when(
-    prop_y < 0.025 ~ "",
-    TRUE ~ label_raw
-  ))
-
-
-
-
-allrangebarplt <- ggplot(scombined |> mutate(Species_label = case_when(
-  Species == "H1" ~ "Host H",
-  Species == "H2" ~ "Host M",
-  Species == "P" ~ "Pathogen"
-)), aes(x="", fill=as.factor(range_summary))) + 
-  geom_bar(stat = "count", position = "fill", show.legend = TRUE) + 
-  labs(x = "", 
-       y = "Proportion") +
-  theme_minimal() +
-  #facet_grid(rows=vars(CH2), cols = vars(phi), labeller=label_bquote(cols = phi == .(phi), rows =c[H]^ {(2)} == .(CH2))) +
-  #facet_grid(rows=vars(shape_combi), cols = vars(phi), labeller=label_bquote(cols = phi == .(phi))) +
-  facet_grid(cols=vars(phi), rows = vars(Species_label),labeller=label_bquote(cols = phi == .(as.character(phi)) , rows = .(Species_label))) +
-  scale_fill_manual(values = c("1" = "#AFB42B",
-                               "2" = "#FFA726FF",
-                               "3" = "#F57C00FF",
-                               "4" = "#FF95A8FF",
-                               "5" = "#EC407AFF",
-                               "6" = "#C2185BFF",
-                               "7" = "#8A4198FF",
-                               "8" = "mediumorchid3",
-                               "9" = "lightblue",
-                               "10" = "darkseagreen2",
-                               "11" = "limegreen",
-                               "12" = "#008EA0FF",
-                               "13" = "darkturquoise",
-                               "14" = "#1A5355FF",
-                               "15" = "black"),
-                    labels = c("1" = "0",
-                               "2" = "1",
-                               "3" = "0 + 1",
-                               "4" = "2",
-                               "5" = "0 + 2",
-                               "6" = "1 + 2",
-                               "7" = "0 + 1 +2",
-                               "8" = "3",
-                               "9" = "0 + 3",
-                               "10" = "1 + 3",
-                               "11" = "0 + 1 +3",
-                               "12" = "2 + 3",
-                               "13" = "0 + 2 + 3",
-                               "14" = "1 + 2 + 3",
-                               "15" = "0 + 1 + 2  + 3"), drop = FALSE, name = "# of resistance (R) alleles\nor virulence (V) alleles/\n in maintained\nhaplotypes") +
-  labs(title = "", 
-       x = "", 
-       y = "Proportion out of\n90,000 simulations") +
-  theme_bw() +
-  geom_text(data = nrange_summary , aes(y=prop_y, label = label, group = range_summary), 
-            position = position_stack(vjust=0.5),  # Adjust label position
-            size = 6,
-            color = "white")   +
-  theme(strip.text = element_text(size = 16, hjust = 0.5, margin = margin(t=4.4, r=4.4, b=4.4, l=4.4, "pt"), face  = 2), 
-        axis.text = element_text(size = 12),
-        axis.title.x = element_text(vjust = -0.75, size = 14),
-        axis.title.y = element_text(margin = unit(c(0, 4, 0, 0), "mm"), size = 14),
-        panel.grid = element_blank(),
-        axis.ticks.x = element_blank(),
-        title = element_text(face = "bold", size = 16),
-        panel.spacing = unit(0, "cm")) 
-
-allrangebarplt <- tag_facet(allrangebarplt, x = 0.5, y = 1.05, size = 4, hjust = -0.5, vjust = 0) +
-  theme(strip.text = element_text(size = 16, hjust = 0.5, margin = margin(t=4.4, r=4.4, b=4.4, l=4.4, "pt"), face  = 2), 
-        axis.text = element_text(size = 12),
-        axis.title.x = element_text(vjust = -0.75, size = 14),
-        axis.title.y = element_text(size = 14),
-        panel.grid = element_blank(),
-        strip.background = element_rect(fill = "gray90", colour = "gray40")) +
-  guides(fill = guide_legend(ncol = 2))
-
-# note default strip.background for theme_bw has fill = "gray85" and color = "gray20"
-
-pdf(paste0(main_figures,"/Fig_4_ranges_across_all_shapes.pdf"), width = 8, height = 10)
-print(allrangebarplt)
-dev.off()
 
