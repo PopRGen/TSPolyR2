@@ -25,12 +25,18 @@ args <- add_argument(args, arg="--outdir",
                      help="output directory for the plots. Relative to parent dir.",
                      default = "../Figures",
                      type="character")
+args <- add_argument(args, arg="--tabledir",
+                     help="output directory for the supplementary tables. Relative to parent dir.",
+                     default = "../supplementary_tables",
+                     type="character")
 pargs <- parse_args(args)
 
 # Parse the command line arguments
 indir <- pargs[["parentdir"]]
 outdir <- pargs[["outdir"]]
 suffix <- pargs[["suffix"]]
+tabledir <- pargs[["tabledir"]]
+
 
 setwd(indir)
 getwd()
@@ -49,6 +55,10 @@ if(!dir.exists(main_figures)){
 
 if(!dir.exists(supplementary_figures)){
   dir.create(supplementary_figures)
+}
+
+if(!dir.exists(tabledir)){
+  dir.create(tabledir)
 }
 
 # Create an overview of all files in end summaries
@@ -257,8 +267,21 @@ Ralleles_summary <- caseH_phi %>%
    mutate(label = case_when(
     prop_y < 0.05 ~ "",
     TRUE ~ label_raw
+  )) |>
+  mutate(Rcombi = case_when(
+    R_alleles == 0 ~ "none",
+    R_alleles == 1 ~ "private only",
+    R_alleles == 2 ~ "ancestral only",
+    R_alleles == 3 ~ "both", 
+    TRUE ~ "unaccounted"
   ))
+
+out_std_Rsum <- Ralleles_summary |>
+  select(Species_label, phi, Rcombi, prop_y) |>
+  mutate(prop_y = format(round(prop_y, digits =3), nsmall = 3)) |>
+  pivot_wider(values_from = prop_y, names_from = Rcombi)
     
+write_csv(out_std_Rsum, paste0(tabledir, "/out_std_Rsum.csv"))
     
     
 pt_phi_Ralleles_plt <- ggplot(caseH_phi, aes(x=CH1, y=CP1)) + 
@@ -266,7 +289,7 @@ pt_phi_Ralleles_plt <- ggplot(caseH_phi, aes(x=CH1, y=CP1)) +
   facet_grid(cols= vars(Species_label), rows = vars(phi), labeller=label_bquote(rows = phi == .(as.character(phi)))) +
   scale_color_manual(
     values = c("0" = "burlywood3", 
-                "1" = "#00A087FF",
+                "1" = "#FF8F00",
                 "2" = "#64B5F6",
                 "3" = "#3C5488FF"), 
     labels = c("0" = "none", 
@@ -305,7 +328,7 @@ f2 <- ggplot(caseH_phi , aes(x="", fill=factor(R_alleles, levels = c(rev(as.char
   facet_grid(rows = vars(phi), cols = vars(Species_label), labeller=label_bquote(rows = phi == .(as.character(phi)) , cols = .(Species_label))) +
   scale_fill_manual(
     values = c("0" = "burlywood3", 
-                "1" = "#00A087FF",
+                "1" = "#FF8F00",
                 "2" = "#64B5F6",
                 "3" = "#3C5488FF"), 
     labels = c("0" = "none", 
@@ -353,7 +376,21 @@ R_alleles_summary <- datH_dat %>%
   mutate(label = case_when(
     prop_y < 0.05 ~ "",
     TRUE ~ label_raw
+  )) |>
+  mutate(Rcombi = case_when(
+    R_alleles == 0 ~ "none",
+    R_alleles == 1 ~ "private only",
+    R_alleles == 2 ~ "ancestral only",
+    R_alleles == 3 ~ "both", 
+    TRUE ~ "unaccounted"
   ))
+
+out_all_Rsum <- R_alleles_summary |>
+  select(Species_label, phi_label, Rcombi, prop_y) |>
+  mutate(prop_y = format(round(prop_y, digits =3), nsmall = 3)) |>
+  pivot_wider(values_from = prop_y, names_from = Rcombi)
+
+write_csv(out_all_Rsum, paste0(tabledir, "/out_all_Rsum.csv"))
 
 # This is for the labelling the facets
 
@@ -366,7 +403,7 @@ R_alleles_acrossall_plt <- ggplot(datH_dat, aes(x="", fill= factor(R_alleles, le
   facet_grid(rows = vars(phi_label), cols = vars(Species_label), labeller=labeller(phi_label =label_parsed)) +
   scale_fill_manual(
     values = c("0" = "burlywood3", 
-               "1" = "#00A087FF",
+               "1" = "#FF8F00",
                "2" = "#64B5F6",
                "3" = "#3C5488FF"), 
     labels = c("0" = "none", 
@@ -399,9 +436,6 @@ R_alleles_acrossall_plt <- ggplot(datH_dat, aes(x="", fill= factor(R_alleles, le
             position = position_stack(vjust=0.5),  # Adjust label position
             size = 7,
             color = "white")
-
-
-legend_plot <- cowplot::get_legend(R_alleles_acrossall_plt) 
 
 
 Fig2_new <- pt_phi_Ralleles_plt + theme(legend.position = "none") + ggtitle("Effect of maximum costs\nfor fixed shapes") + 
@@ -442,7 +476,26 @@ poly_summary <- caseH_phi %>%
   mutate(label = case_when(
     prop_y < 0.05 ~ "",
     TRUE ~ label_raw
+  ))|>
+  # If the proportion is smaller than 2.5% then make the label empty
+  mutate(label = case_when(
+    prop_y < 0.05 ~ "",
+    TRUE ~ label_raw
+  )) |>
+  mutate(poly = case_when(
+    poly == 0 ~ "none",
+    poly == 1 ~ "private only",
+    poly == 2 ~ "ancestral only",
+    poly == 3 ~ "both", 
+    TRUE ~ "unaccounted"
   ))
+
+out_std_poly <- poly_summary |>
+  select(Species_label, phi, poly, prop_y) |>
+  mutate(prop_y = format(round(prop_y, digits =3), nsmall = 3)) |>
+  pivot_wider(values_from = prop_y, names_from = poly)
+
+write_csv(out_std_poly, paste0(tabledir, "/out_std_poly.csv"))
     
     
     
@@ -450,7 +503,7 @@ pt_phi_poly_plt <- ggplot(caseH_phi, aes(x=CH1, y=CP1)) +
   geom_point(aes(color=factor(poly, levels = rev(as.character(0:3)))), show.legend=T, size = 0.3) +
   facet_grid(cols= vars(Species_label), rows = vars(phi), labeller=label_bquote(rows = phi == .(as.character(phi)))) +
   scale_color_manual(values = c("0" = "burlywood3", 
-                                "1" = "#00A087FF",
+                                "1" = "#FF8F00",
                                 "2" = "#64B5F6",
                                 "3" = "#3C5488FF"), 
                      labels = c("0" = "none", 
@@ -483,7 +536,7 @@ fpoly <- ggplot(caseH_phi , aes(x="", fill=factor(poly, levels = rev(as.characte
   facet_grid(rows=vars(phi), cols = vars(Species_label),labeller=label_bquote(rows = phi == .(as.character(phi)) , cols = .(Species_label))) +
   scale_fill_manual(
     values = c("0" = "burlywood3",
-               "1" = "#00A087FF",
+               "1" = "#FF8F00",
                "2" = "#64B5F6",
                "3" = "#3C5488FF"),
     labels = c("0" = "none",
@@ -527,7 +580,26 @@ npoly_summary <- datH_dat %>%
   mutate(label = case_when(
     prop_y < 0.05 ~ "",
     TRUE ~ label_raw
+  ))|>
+  # If the proportion is smaller than 2.5% then make the label empty
+  mutate(label = case_when(
+    prop_y < 0.05 ~ "",
+    TRUE ~ label_raw
+  )) |>
+  mutate(poly = case_when(
+    poly == 0 ~ "none",
+    poly == 1 ~ "private only",
+    poly == 2 ~ "ancestral only",
+    poly == 3 ~ "both", 
+    TRUE ~ "unaccounted"
   ))
+
+out_all_poly <- npoly_summary |>
+  select(Species_label, phi_label, poly, prop_y) |>
+  mutate(prop_y = format(round(prop_y, digits =3), nsmall = 3)) |>
+  pivot_wider(values_from = prop_y, names_from = poly)
+
+write_csv(out_all_poly, paste0(tabledir, "/out_all_poly.csv"))
 
 
 polyprops_acrossall_plt <- ggplot(datH_dat, aes(x="", fill= factor(poly, levels = rev(as.character(0:3))))) + 
@@ -538,7 +610,7 @@ polyprops_acrossall_plt <- ggplot(datH_dat, aes(x="", fill= factor(poly, levels 
   facet_grid(rows = vars(phi_label), cols = vars(Species_label), labeller=labeller(phi_label =label_parsed)) +
   scale_fill_manual(
     values = c("0" = "burlywood3", 
-               "1" = "#00A087FF",
+               "1" = "#FF8F00",
                "2" = "#64B5F6",
                "3" = "#3C5488FF"), 
     labels = c("0" = "none", 
