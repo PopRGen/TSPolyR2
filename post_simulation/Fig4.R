@@ -16,12 +16,14 @@ require("RColorBrewer") # needed for color coding the cell of the formatted late
 # For example: 0 + 1 indicates that the haplotype wi
 
 
-datH_dat <- read_tsv("datH_dat.tsv")
-datP_dat <- read_tsv("datP_dat.tsv")
+indir <- "results_random"
 
-setwd(indir)
+# Results for the hosts and the pathogen
+datH_dat <- read_tsv(paste0(indir, "/datH_dat.tsv"))
+datP_dat <- read_tsv(paste0(indir, "/datP_dat.tsv"))
 
-outdir <- "../Figures"
+# Set the output directory
+outdir <- "Figures"
 
 main_figures <- paste0(outdir,"/main_figures")
 supplementary_figures <- paste0(outdir, "/supplementary_figures")
