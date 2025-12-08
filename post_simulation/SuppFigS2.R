@@ -4,11 +4,6 @@ suppressPackageStartupMessages(require("patchwork"))
 suppressPackageStartupMessages(require("ggpubr"))
 
 
-
-
-plotdir <- "Figures/supplementary_figures"
-
-
 if(!dir.exists(plotdir)){
   dir.create(plotdir)
 }
@@ -28,7 +23,7 @@ XiH <- 3
 XiP <- 3
 phi <- 0.5
 seed <- 1600
-plotdir <- "Figures/main_figures"
+plotdir <- "Figures/supplementary_figures"
 indir <- "Data_SFig2"
 
 
