@@ -4,11 +4,12 @@ suppressPackageStartupMessages(require("ggplot2"))
 suppressPackageStartupMessages(require("patchwork"))
 suppressPackageStartupMessages(require("ggpubr"))
 
+# Script to generate Fig 1D and 1E
 
-
+# Function to generate the dynamics plots for a given time interval (left hand side Fig 1D)
 dynamics_fct <- function(daten_longer_cumsum, tmin, tmax){
   plt <- ggplot(daten_longer_cumsum |>
-         filter(time < tmax & time > tmin & freq > 0),
+         filter(time <= tmax & time > tmin & freq >= 0),
        aes(x=time)) +
   geom_line(aes(x=time, y=freq, linetype = Species_label, color = Genotype, alpha = Species_label)) +
   scale_alpha_manual(values=c(1, 0.5, 1)) +
@@ -20,7 +21,10 @@ dynamics_fct <- function(daten_longer_cumsum, tmin, tmax){
   ylab("freq") +
   scale_linetype_manual(values = c("Host H"="solid", "Host M"="11", "Pathogen"="solid")) +
   ylab("Frequency") +
-  ggtitle(paste0("time span: ",format(tmin, big.mark = ",", scientific = FALSE)," - ",format(tmax, big.mark = ",", scientific = FALSE))) +
+  ggtitle(paste0("time span: ",
+                 format(tmin, big.mark = ",", scientific = FALSE),
+                 " - ",
+                 format(tmax, big.mark = ",", scientific = FALSE))) +
   ylim(0,1)  +
   theme() +
   scale_x_continuous(limits = c(tmin, tmax), expan = expansion())   +
@@ -36,10 +40,16 @@ dynamics_fct <- function(daten_longer_cumsum, tmin, tmax){
         axis.title.x = element_text(margin = unit(c(4, 0, 0, 0), "mm")),
         axis.text = element_text(size = 11),
         axis.title = element_text(size = 12))+ 
-    guides(color = "none", alpha = "none", linetype = guide_legend(override.aes = list(color = "gray50", size = c(4,4,4), linewidth = c(2,1,2), alpha = c(1,0.8,1))))
+    guides(color = "none",
+           alpha = "none",
+           linetype = guide_legend(override.aes = list(color = "gray50",
+                                                       size = c(4,4,4),
+                                                       linewidth = c(2,1,2),
+                                                       alpha = c(1,0.8,1))))
   return(plt)
 }
 
+# Function to plot the cumulative dynamics right hand side Figure 1E
 cumdynamics_plt <- function(daten_longer_cumsum, tmin, tmax){
   plt <- ggplot(daten_longer_cumsum |> 
            filter(time <= tmax & time >= tmin), 
@@ -50,7 +60,10 @@ cumdynamics_plt <- function(daten_longer_cumsum, tmin, tmax){
                                   "001"="brown4","110"="#1BB6AFFF","101"="#088BBEFF","011"="#172869FF","111"="gray20")) +
     theme_minimal() +
     ylab("cumulative frequency") +
-    ggtitle(paste0("time span: ",format(tmin, big.mark = ",", scientific = FALSE)," - ",format(tmax, big.mark = ",", scientific = FALSE))) +
+    ggtitle(paste0("time span: ",
+                   format(tmin, big.mark = ",", scientific = FALSE),
+                   " - ",
+                   format(tmax, big.mark = ",", scientific = FALSE))) +
     theme(strip.text.y = element_text(size = 10, face = 2, hjust =0),
           axis.title.y = element_text(margin = unit(c(0, 4, 0, 0), "mm")),
           axis.title.x = element_text(margin = unit(c(4, 0, 0, 0), "mm")),
@@ -64,9 +77,7 @@ cumdynamics_plt <- function(daten_longer_cumsum, tmin, tmax){
 }
 
 
-
-# Script to generate Fig 1D and 1E
-
+# Settings for the simulation plotted in Fig1 D and E 
 prefix <- "ext_reps"
 suffix <- "2025-01-07"
 omegaH <- 0.1
@@ -77,9 +88,6 @@ phi <- 0.5
 seed <- 1600
 plotdir <- "Figures/main_figures"
 
-
-outplt <- paste0(plotdir,"/dynamics_cH2_",XiH,"_cP2_",XiP,"_phi_",phi,"_cH1_",omegaH,"_cP1_",omegaP,".pdf")
-outplt_extended <- paste0(plotdir,"/dynamics_cH2_",XiH,"_cP2_",XiP,"_phi_",phi,"_cH1_",omegaH,"_cP1_",omegaP,"_extended.pdf")
 
 if(!dir.exists(plotdir)){
   dir.create(plotdir, recursive = TRUE)
@@ -92,11 +100,23 @@ betaP <- 1
 
 
 # Simulation prefix. This is the entire file name prefix for all the result files of the simulation
-simprefix <- paste0(prefix,"_phi_",phi,"_cH_1_",omegaH,"_cH_2_",XiH,"_cP_1_",omegaP,"_cP_2_",XiP,"_s_",sigma,"_bH_",betaH,"_bP_",betaP,"_seed_",seed,"_",suffix)
+simprefix <- paste0(prefix,
+                    "_phi_",phi,
+                    "_cH_1_",omegaH,
+                    "_cH_2_",XiH,
+                    "_cP_1_",omegaP,
+                    "_cP_2_",XiP,
+                    "_s_",sigma,
+                    "_bH_",betaH,
+                    "_bP_",betaP,
+                    "_seed_",seed,
+                    "_",suffix)
 
 # Read the dynamics from the file
 daten_longer_cumsum <- read_tsv(paste0("Data_Fig1/",simprefix,"_long.tsv"))
 
+
+# Add a column called Species_label
 daten_longer_cumsum <- daten_longer_cumsum |>
   ungroup() |>
   mutate(Species_label = case_when(
@@ -106,7 +126,8 @@ daten_longer_cumsum <- daten_longer_cumsum |>
     TRUE ~ "unidentified"
   ))
 
-# Add additional column to allow for proper formatting of the final plot
+# Add an additional column to allow for proper formatting and sorting in the plots on the left
+# hand side of Figure 1E and the proper order of genotypes in the legend
 daten_longer_cumsum <- daten_longer_cumsum |>
   mutate(IPart = case_when(
     Species%in%c("H1", "H2") ~ "Hosts",
@@ -115,9 +136,28 @@ daten_longer_cumsum <- daten_longer_cumsum |>
   )) |>
   mutate(Genotype = factor(Genotype, levels = c("000", "100", "010", "001", "110", "101", "011", "111")))
 
+# Add an additional column to allow for proper sorting of genotypes on the right hand side of Fig 1E
+daten_longer_cumsum <- daten_longer_cumsum |>
+  separate_wider_position(Genotype, widths = c("L1"=1, "L2"=1, "L3"=1) , cols_remove = F) |>
+  mutate(range = as.numeric(L1) + as.numeric(L2) + as.numeric(L3)) |>
+  mutate(rsortID = case_when(
+    Species %in% c("H1","H2") ~ as.numeric(ID),
+    Species == "P" & Genotype == "000" ~ 0,
+    Species == "P" & Genotype == "100" ~ 1,
+    Species == "P" & Genotype == "010" ~ 2,
+    Species == "P" & Genotype == "001" ~ 3,
+    Species == "P" & Genotype == "110" ~ 4,
+    Species == "P" & Genotype == "101" ~ 5,
+    Species == "P" & Genotype == "011" ~ 6,
+    Species == "P" & Genotype == "111" ~ 7,
+    TRUE ~ -999
+  ))
+
+
+
 
 #######################
-# Fig 1E ##############
+# Fig 1D ##############
 #######################
 
 dynamicflt_plt_full <- ggplot(daten_longer_cumsum, aes(x=time)) +
@@ -158,230 +198,41 @@ dev.off()
 
 
 #####################################################
-# Fig 1F fluctuations of allele frequencies 0-1,000 #
+# Fig 1E Fluctuations of allele frequencies 
+# LEFT SIDE
+# plot three time intervals
 #####################################################
 
+# First time interval
 dynamicflt_plt1 <- dynamics_fct(daten_longer_cumsum, 0, 1000)
+# Second time interval
 dynamicflt_plt2 <- dynamics_fct(daten_longer_cumsum, 9000, 10000)
+# Third time interval
 dynamicflt_plt3 <- dynamics_fct(daten_longer_cumsum, 99000, 100000)
 
 
-# dynamicflt_plt1 <- ggplot(daten_longer_cumsum |>
-#                            filter(time < 1000 & freq > 0),
-#                          aes(x=time)) +
-#   geom_line(aes(x=time, y=freq, linetype = Species_label, color = Genotype, alpha = Species_label)) +
-#   scale_alpha_manual(values=c(1, 0.5, 1)) +
-#   geom_point(aes(x=time, y=freq, shape = Species_label, color = Genotype, alpha = Species_label), size = 0.4) +
-#   facet_grid(rows = vars(IPart), scales = "free_y") +
-#   scale_color_manual(values =  c("000"="gray80", "100"="#D9565CFF","010"="#F28A8AFF",
-#                                  "001"="brown4","110"="#1BB6AFFF","101"="#088BBEFF","011"="#172869FF","111"="gray20")) +
-#   theme_bw() +
-#   ylab("freq") +
-#   scale_linetype_manual(values = c("Host H"="solid", "Host M"="11", "Pathogen"="solid")) +
-#   ylab("Frequency") +
-#   ggtitle("time span: 0 - 1,000") +
-#   ylim(0,1)  +
-#   theme() +
-#   scale_x_continuous(limits = c(0, 1000), expan = expansion())   +
-#   theme(plot.margin = unit(c(0.05, 0.2, 0, 1), 'lines'), 
-#         panel.grid.major.x = element_line(color = "gray40"), 
-#         panel.grid.minor.x = element_line(color = "gray80"),
-#         legend.key.width = unit(1,"cm"),
-#         legend.text = element_text(size = 12),
-#         legend.title = element_blank(),
-#         strip.background = element_blank(), 
-#         strip.text = element_text(hjust = 0, size = 12, face = 2),
-#         axis.title.y = element_text(margin = unit(c(0, 4, 0, 0), "mm")),
-#         axis.title.x = element_text(margin = unit(c(4, 0, 0, 0), "mm")),
-#         axis.text = element_text(size = 11),
-#         axis.title = element_text(size = 12))+ 
-#   guides(color = "none", linetype = "none", alpha = "none", shape = "none")
-# 
-# 
-# dynamicflt_plt2 <- ggplot(daten_longer_cumsum |>
-#          filter(time < 10000 & time > 9000 & freq > 0),
-#        aes(x=time)) +
-#   geom_line(aes(x=time, y=freq, linetype = Species_label, color = Genotype, alpha = Species_label)) +
-#   scale_alpha_manual(values=c(1, 0.5, 1)) +
-#   #geom_line(aes(x=time, y=freq, color = Genotype, group = interaction(Species, Genotype))) +
-#   geom_point(aes(x=time, y=freq, shape = Species_label, color = Genotype, alpha = Species_label), size = 0.4) +
-#   #geom_line(aes(y = cumsum_freq, color = Genotype)) +
-#   facet_grid(rows = vars(IPart), scales = "free_y") +
-#   scale_color_manual(values =  c("000"="gray80", "100"="#D9565CFF","010"="#F28A8AFF",
-#                                  "001"="brown4","110"="#1BB6AFFF","101"="#088BBEFF","011"="#172869FF","111"="gray20")) +
-#   theme_bw() +
-#   theme(panel.grid.major.x = element_line(color = "gray20"), panel.grid.minor.x = element_line(color = "gray80")) +
-#   ylab("freq") +
-#   #labs(subtitle = "(b)") +
-#   scale_linetype_manual(values = c("Host H"="solid", "Host M"="11", "Pathogen"="solid")) +
-#   ylab("Frequency") +
-#   ggtitle("time span: 9,000 - 10,000") +
-#   ylim(0,1) +
-#   theme(plot.margin = unit(c(0.05,0.2,0,1), 'lines')) + 
-#   scale_x_continuous(limits = c(9000, 10000), expan = expansion())    +
-#   theme(legend.key.width = unit(1,"cm"),
-#         legend.text = element_text(size = 12),
-#         legend.title = element_blank(),
-#         strip.background = element_blank(), 
-#         strip.text = element_text(hjust = 0, size = 12, face = 2),
-#         axis.title.y = element_text(margin = unit(c(0, 4, 0, 0), "mm")),
-#         axis.title.x = element_text(margin = unit(c(4, 0, 0, 0), "mm")),
-#         axis.text = element_text(size = 11),
-#         axis.title = element_text(size = 12)) +
-#   guides(color = "none", alpha = "none", 
-#          linetype = guide_legend(override.aes = list(color = "gray50", size = c(4,4,4), linewidth = c(2,1,2), alpha = c(1,0.8,1))))
-# 
-# 
-# dynamicflt_plt3 <- ggplot(daten_longer_cumsum |>
-#                            filter(time > 99000 & time < 100000 & freq > 0),
-#                          aes(x=time)) +
-#   geom_line(aes(x=time, y=freq, linetype = Species_label, color = Genotype, alpha = Species_label)) +
-#   scale_alpha_manual(values=c(1, 0.5, 1)) +
-#   #geom_line(aes(x=time, y=freq, color = Genotype, group = interaction(Species, Genotype))) +
-#   geom_point(aes(x=time, y=freq, shape = Species_label, color = Genotype, alpha = Species_label), size = 0.4) +
-#   #geom_line(aes(y = cumsum_freq, color = Genotype)) +
-#   facet_grid(rows = vars(IPart), scales = "free_y") +
-#   scale_color_manual(values =  c("000"="gray80", "100"="#D9565CFF","010"="#F28A8AFF",
-#                                  "001"="brown4","110"="#1BB6AFFF","101"="#088BBEFF","011"="#172869FF","111"="gray20")) +
-#   theme_bw() +
-#   theme(panel.grid.major.x = element_line(color = "gray40"), panel.grid.minor.x = element_line(color = "gray80")) +
-#   ylab("freq") + #+
-#   #labs(subtitle = "(c)") +
-#   scale_linetype_manual(values = c("Host H"="solid", "Host M"="11", "Pathogen"="solid")) +
-#   ylab("Frequency") +
-#   ylim(0,1) +
-#   ggtitle("time span: 99,000 - 100,000") +
-#   theme(plot.margin = unit(c(0.05, 0.2,0,1), 'lines')) +
-#   scale_x_continuous(limits = c(99000, 100000), expan = expansion()) +
-#   theme(legend.key.width = unit(1,"cm"),
-#         legend.text = element_text(size = 12),
-#         legend.title = element_blank(),
-#         strip.background = element_blank(), 
-#         strip.text = element_text(hjust = 0, size = 12, face = 2),
-#         axis.title.y = element_text(margin = unit(c(0, 4, 0, 0), "mm")),
-#         axis.title.x = element_text(margin = unit(c(4, 0, 0, 0), "mm")),
-#         axis.text = element_text(size = 11),
-#         axis.title = element_text(size = 12)) + 
-#   guides(color = "none", linetype = "none", alpha = "none", shape = "none")
+#####################################################
+# Fig 1E Fluctuations of allele frequencies 
+# cumulative view RIGHT SIDE
+# plot three time intervals
+#####################################################
 
-
-daten_longer_cumsum <- daten_longer_cumsum |>
-  separate_wider_position(Genotype, widths = c("L1"=1, "L2"=1, "L3"=1) , cols_remove = F) |>
-  mutate(range = as.numeric(L1) + as.numeric(L2) + as.numeric(L3)) |>
-  mutate(rsortID = case_when(
-    Species %in% c("H1","H2") ~ as.numeric(ID),
-    Species == "P" & Genotype == "000" ~ 0,
-    Species == "P" & Genotype == "100" ~ 1,
-    Species == "P" & Genotype == "010" ~ 2,
-    Species == "P" & Genotype == "001" ~ 3,
-    Species == "P" & Genotype == "110" ~ 4,
-    Species == "P" & Genotype == "101" ~ 5,
-    Species == "P" & Genotype == "011" ~ 6,
-    Species == "P" & Genotype == "111" ~ 7,
-    TRUE ~ -999
-  ))
-
-
+# First time interval
 p1 <- cumdynamics_plt(daten_longer_cumsum, tmin = 0 , tmax = 1000)
-p2 <-  cumdynamics_plt(daten_longer_cumsum, tmin = 9000, tmax = 10000)
-p3 <-  cumdynamics_plt(daten_longer_cumsum, tmin = 99000, tmax = 100000)
-
-p1 <- ggplot(daten_longer_cumsum |> 
-               filter(time <=1000), 
-       aes(x=time)) + 
-  geom_ribbon(aes(ymin = lower_freq, ymax = cumsum_freq, fill= Genotype), alpha = 1 ) + 
-  facet_grid(rows =vars(Species_label)) + 
-  scale_fill_manual(values =  c("000"="gray80", "100"="#D9565CFF","010"="#F28A8AFF",
-                                 "001"="brown4","110"="#1BB6AFFF","101"="#088BBEFF","011"="#172869FF","111"="gray20")) +
-  theme_minimal() +
-  ylab("cumulative frequency") +
-  ggtitle("time span: 0 - 1,000") +
-  theme(strip.text.y = element_text(size = 10, face = 2, hjust =0),
-        axis.title.y = element_text(margin = unit(c(0, 4, 0, 0), "mm")),
-        axis.title.x = element_text(margin = unit(c(4, 0, 0, 0), "mm")),
-        axis.text = element_text(size = 11),
-        axis.title = element_text(size = 12),
-        legend.text = element_text(size= 12),
-        legend.title = element_text(size = 13, face =2)
-        ) + 
-  guides(fill= guide_legend(override.aes = list(size = 10))) 
-
-p2plt <- TRUE
-
-if(any(daten_longer_cumsum[["time"]] > 9000 & daten_longer_cumsum[["time"]] < 10000 ) ){
-  p2 <- ggplot(daten_longer_cumsum |> filter(time > 9000 & time < 10000), 
-               aes(x=time)) + 
-    geom_ribbon(aes(ymin = lower_freq, ymax = cumsum_freq, fill= Genotype), alpha = 1 ) + 
-    facet_grid(rows =vars(Species_label)) + 
-    scale_fill_manual(values =  c("000"="gray80", "100"="#D9565CFF","010"="#F28A8AFF",
-                                 "001"="brown4","110"="#1BB6AFFF","101"="#088BBEFF","011"="#172869FF","111"="gray20")) +
-    theme_minimal() +
-    ylab("cum. freq") +
-    ggtitle("time span: 9,000 - 10,000") +
-    ylab("cumulative frequency") +
-    theme(strip.text.y = element_text(size = 10, face = 2, hjust = 0),
-          axis.title.y = element_text(margin = unit(c(0, 4, 0, 0), "mm")),
-          axis.title.x = element_text(margin = unit(c(4, 0, 0, 0), "mm")),
-          axis.text = element_text(size = 11),
-          axis.title = element_text(size = 12),
-          legend.text = element_text(size= 12),
-          legend.title = element_text(size = 13, face =2)
-    ) +
-    guides(fill= guide_legend(override.aes = list(size = 10)))#+
-}else{
-  p2 <- ggplot(daten_longer_cumsum |> filter(time > 1000), 
-               aes(x=time)) + 
-    geom_ribbon(aes(ymin = lower_freq, ymax = cumsum_freq, fill= Genotype), alpha = 1 ) + 
-    facet_grid(rows =vars(Species_label)) + 
-    scale_fill_manual(values =  c("000"="gray80", "100"="#D9565CFF","010"="#F28A8AFF",
-                                 "001"="brown4","110"="#1BB6AFFF","101"="#088BBEFF","011"="#172869FF","111"="gray20")) +
-    theme_minimal() +
-    ylab("cum. freq") +
-    ggtitle("time span: 1000 - 100,000") +
-    ylab("cumulative frequency")
-    theme(strip.text.y = element_text(size = 10, face = 2, hjust = 0),
-          axis.title.y = element_text(margin = unit(c(0, 4, 0, 0), "mm")),
-          axis.title.x = element_text(margin = unit(c(4, 0, 0, 0), "mm")),
-          axis.text = element_text(size = 11),
-          axis.title = element_text(size = 12),
-          legend.text = element_text(size= 12),
-          legend.title = element_text(size = 13, face =2)
-    )
-    guides(fill= guide_legend(override.aes = list(size = 10))) #+
-}
-
-p3plt <- FALSE
-
-if(any(daten_longer_cumsum[["time"]] > 99000 & daten_longer_cumsum[["time"]] < 100000 ) ){
-  p3plt <- TRUE
-  p3 <- ggplot(daten_longer_cumsum |> filter(time > 99000 & time < 100000), 
-               aes(x=time)) + 
-    geom_ribbon(aes(ymin = lower_freq, ymax = cumsum_freq, fill= Genotype), alpha = 1 ) + 
-    facet_grid(rows =vars(Species_label)) + 
-    scale_fill_manual(values =  c("000"="gray80", "100"="#D9565CFF","010"="#F28A8AFF",
-                                 "001"="brown4","110"="#1BB6AFFF","101"="#088BBEFF","011"="#172869FF","111"="gray20")) +
-    theme_minimal() +
-    ylab("cum. freq") +
-    ggtitle("time span: 99,000 - 100,000") +
-    ylab("cumulative frequency") +
-    theme(strip.text.y = element_text(size = 10, face = 2, hjust = 0),
-          axis.title.y = element_text(margin = unit(c(0, 4, 0, 0), "mm")),
-          axis.title.x = element_text(margin = unit(c(4, 0, 0, 0), "mm")),
-          axis.text = element_text(size = 11),
-          axis.title = element_text(size = 12),
-          legend.text = element_text(size= 12),
-          legend.title = element_text(size = 13, face =2)#,
-    ) + 
-    guides(fill= guide_legend(override.aes = list(size = 10)))#+
-}
+# Second time interval
+p2 <- cumdynamics_plt(daten_longer_cumsum, tmin = 9000, tmax = 10000)
+# Third time interval
+p3 <- cumdynamics_plt(daten_longer_cumsum, tmin = 99000, tmax = 100000)
 
 
-
-
-
+# Combine into the final Figure 1F
 Fig1 <- (dynamicflt_plt1 + p1) / (dynamicflt_plt2 + p2)+ (dynamicflt_plt3 + p3) + 
-  plot_layout(guides = "collect") + plot_annotation(tag_levels = "i", tag_prefix = "(", tag_suffix = ")")
-  
+  plot_layout(guides = "collect") 
+
+#############################
+## Export as SVG  
+############################
+
 svg(paste0(plotdir,"/Fig1.svg"), width = 10, height = 10)
 print(Fig1)
 dev.off()
