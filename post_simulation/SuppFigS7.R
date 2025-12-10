@@ -62,12 +62,12 @@ ancestral_poly <- ggplot(datH_trans |> filter(phi<1), aes(x=factor(phi), fill= f
             position = position_stack(vjust=0.5),  # Adjust label position
             size = 4,
             color = "black", fontface = 2) +
-  theme(strip.text = element_text(size = 13, hjust = 0, margin = margin(t=4.4, r=4.4, b=4.4, l=4.4, "pt"), face  = 2), 
-        legend.text = element_text(size = 11),
-        legend.title = element_text(size = 12, face = 2),
-        axis.text = element_text(size = 11),
-        axis.title.x = element_text(vjust = -0.75, size = 12),
-        axis.title.y = element_text(size = 12),
+  theme(strip.text = element_text(size = 14, hjust = 0, margin = margin(t=4.4, r=4.4, b=4.4, l=4.4, "pt"), face  = 2), 
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14, face = 2),
+        axis.text = element_text(size = 12),
+        axis.title.x = element_text(vjust = -0.75, size = 14),
+        axis.title.y = element_text(size = 14),
         panel.grid = element_blank(),
         strip.background = element_rect(fill = "white", colour = "white")) 
 

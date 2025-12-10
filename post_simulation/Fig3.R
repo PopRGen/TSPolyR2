@@ -23,16 +23,17 @@ require("RColorBrewer") # needed for color coding the cell of the formatted late
 XiH_value <- 3
 XiP_value <- 3
 
-datH_dat <- read_tsv("datH_dat.tsv")
-datP_dat <- read_tsv("datP_dat.tsv")
+indir <- "results_random"
 
-setwd(indir)
+datH_dat <- read_tsv(paste0(indir, "/datH_dat.tsv"))
+datP_dat <- read_tsv(paste0(indir, "/datH_dat.tsv"))
 
-outdir <- "../Figures"
+
+outdir <- "Figures"
 
 main_figures <- paste0(outdir,"/main_figures")
 supplementary_figures <- paste0(outdir, "/supplementary_figures")
-tabledir <- "../supplementary_tables"
+tabledir <- "upplementary_tables"
 
 # Check if all output directories already exist. If not, create them
 # parent output directory
@@ -64,7 +65,6 @@ caseH_phi <- datH_dat |>
   filter(XiH == XiH_value & XiP == XiP_value) |>
   mutate(phi = factor(phi, levels=c(0.5, 0.7, 0.9, 1)))
 
-
 caseP_phi <- datP_dat |>
   filter(XiH == XiH_value & XiP == XiP_value) |>
   mutate(phi = factor(phi, levels=c(0.5, 0.7, 0.9, 1)))
@@ -77,7 +77,7 @@ caseP_phi <- datP_dat |>
 
 # Summarize the resistance alleles maintained for each host species and each value of phi
 poly_summary <- caseH_phi |> 
-  group_by(phi, Species_label, poly = factor(poly, levels = rev(as.character(0:3)))) |>
+  group_by(phi, Species_label, poly) |>
   tally()  |>
   group_by(phi, Species_label) |>
   mutate(prop_y = n/sum(n)) |>
@@ -97,7 +97,8 @@ poly_summary <- caseH_phi |>
     poly == 2 ~ "ancestral only",
     poly == 3 ~ "both", 
     TRUE ~ "unaccounted"
-  ))
+  )) |>
+  mutate(poly = factor(poly, levels = c("none", "private only", "ancestral only", "both")))
 
 # Output the essential parts of the summary table
 out_std_poly <- poly_summary |>
@@ -168,10 +169,11 @@ fpoly <- ggplot(caseH_phi , aes(x="", fill=factor(poly, levels = rev(as.characte
        y = "Proportion out of\n10,000 simulations") +
   # Remove the fill legend
   guides(fill="none") +
-  geom_text(data = poly_summary , aes(y=prop_y, label = label, group = poly), 
+  geom_text(data = poly_summary , aes(x="", y=prop_y, label = label), 
             position = position_stack(vjust=0.5),  # Adjust label position
             size = 6,
-            color = "white") +
+            color = "white",
+            inherit.aes = FALSE) +
   theme(plot.margin = margin(0,0,0,0, 'cm'),
         strip.text = element_text(size = 16, hjust = 0.5, margin = margin(t=4.4, r=4.4, b=4.4, l=4.4, "pt")), 
         axis.text = element_text(size = 14),
