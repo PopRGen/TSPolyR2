@@ -37,7 +37,7 @@ The main parameters which have been investigated in the model are:
     ./Non_ecological_clean
     ```
 
-## Running simulations for a fixed combination of shape parameters ($\Xi_H$=$\Xi_M$, $\Xi_P$) with random values for the maximum costs ($\Omega_H$=$\Omega_M$, $\Omega_P$) and random inital genotype frequencies
+## Running simulations for a fixed combination of shape parameters ($\Xi_H=\Xi_M$, $\Xi_P$) with random values for the maximum costs ($\Omega_H=\Omega_M$, $\Omega_P$) and random inital genotype frequencies
 
 For instructions see [docs/running_simulations/simulations_random.R](./docs/running_simulations/simulations_random.R).
 
@@ -54,7 +54,7 @@ All files for producing the figures in the manuscript can be found in the direct
 
 
 
-## Running simulations for fixed combinations of $c_P^{(1)}$, $c_H^{(1)}$, $c_H^{(2)}$, $c_P^{(2)}$ and $\phi$ with random intial frequencies.
+## Running simulations for fixed combinations of $\Omega_H$, $\Omega_P$, $\Xi_H=\Xi_P$, $\Xi_P$}$ and $\phi$ with random intial frequencies.
 
 Follow steps 1. and 2. above. Use the script [src/Run_simulation.R] to run a simulation inside an array job. 
 Specific instructions and the corresponding slurm submission script can be found here: [docs/running_simulations/simulations_repeated.md](./docs/running_simulations/simulations_repeated.md)
