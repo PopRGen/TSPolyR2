@@ -33,25 +33,24 @@ The main parameters which have been investigated in the model are:
 
 ## Running a single simulation
 
-    ```{bash}
-    ./Non_ecological_clean
-    ```
+```{bash, eval =FALSE}
+./Non_ecological_clean
+```
 
 ## Running simulations for a fixed combination of shape parameters ($\Xi_H=\Xi_M$, $\Xi_P$) with random values for the maximum costs ($\Omega_H=\Omega_M$, $\Omega_P$) and random inital genotype frequencies
 
 For instructions see [docs/running_simulations/simulations_random.R](./docs/running_simulations/simulations_random.R).
 
 
-### Summarize the results
+### Summarizing the results
 
 The results can be summarized with [post_simulation/summarize_analyze_random.R](./docs/post_simulation/summarize_analyze_random.R).
 
 A slurm-submission script to summarize the simulations for $\Xi_H=\Xi_M=\Xi_P=3$, $\phi=0.5$ and RSEED=1700 can be found [here](./docs/post_simulation/run_summary_random.md).
 
-### Producing the main figures in the manuscript
+### Producing the figures in the manuscript
 
 All files for producing the figures in the manuscript can be found in the directory [post_simulation](post_simulation).
-
 
 
 ## Running simulations for fixed combinations of $\Omega_H$, $\Omega_P$, $\Xi_H=\Xi_P$, $\Xi_P$}$ and $\phi$ with random intial frequencies.
