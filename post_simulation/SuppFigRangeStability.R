@@ -148,6 +148,12 @@ GetNonInvRanges <- function(pars) {
   return(non_inv_ranges)
 }
 
+# integrates the dynamics using deSolve
+IntegrateDynamics <- function(inistate, pars, endtime, timestep, fn){
+  times <- seq(0, endtime, by = timestep)
+  timeseries <- as.data.frame(ode(inistate, times, fn, pars))  
+  return(timeseries)
+}
 
 BuildPars <- function(input_params) {
   pars <- with(input_params, {
