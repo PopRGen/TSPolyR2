@@ -27,7 +27,7 @@ outdir <- "Figures"
 
 main_figures <- paste0(outdir,"/main_figures")
 supplementary_figures <- paste0(outdir, "/supplementary_figures")
-tabledir <- "../supplementary_tables"
+tabledir <- "supplementary_tables"
 
 # Check if all output directories already exist. If not, create them
 # parent output directory
@@ -150,6 +150,12 @@ allrangebarplt <- tag_facet(allrangebarplt, x = 0.5, y = 1.05, size = 4, hjust =
 pdf(paste0(main_figures,"/Fig_4_ranges_across_all_shapes.pdf"), width = 8, height = 12)
 print(allrangebarplt)
 dev.off()
+
+ggsave(filename = paste0(main_figures,"/Fig_4_ranges_across_all_shapes.png"), 
+       plot = allrangebarplt,
+       width = 8, 
+       height = 12, 
+       units = "in", dpi = 400)
 
 
 ####### Export all values for different combinations of shape parameters and relative proportions of hosts

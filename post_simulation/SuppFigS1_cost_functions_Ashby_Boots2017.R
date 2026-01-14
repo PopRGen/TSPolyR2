@@ -59,6 +59,11 @@ pdf("Suppl1_fitness_functions.pdf",width=10, height = 3)
   print(tplt)
 dev.off()
 
+ggsave(filename = paste0("Figures/supplementary_figures/Suppl1_fitness_functions.png"), 
+       plot = tplt,
+       width = 10, 
+       height = 3, 
+       units = "in", dpi = 400)
 
 # The simple version
 

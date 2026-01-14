@@ -33,7 +33,7 @@ outdir <- "Figures"
 
 main_figures <- paste0(outdir,"/main_figures")
 supplementary_figures <- paste0(outdir, "/supplementary_figures")
-tabledir <- "upplementary_tables"
+tabledir <- "supplementary_tables"
 
 # Check if all output directories already exist. If not, create them
 # parent output directory
@@ -298,6 +298,13 @@ Fig3_new <- pt_phi_poly_plt + theme(legend.position = "none") + ggtitle("Effect 
 pdf(paste0(main_figures,"/Fig_3_poly.pdf"), width = 15, height = 9)
 print(Fig3_new)
 dev.off()
+
+ggsave(filename = paste0(main_figures,"/Fig_3_poly.png"), 
+       plot = Fig3_new,
+       width = 15, 
+       height = 9, 
+       units = "in", dpi = 400)
+
 
 
 ####### Export all values for different combinations of shape parameters and relative proportions of hosts

@@ -103,3 +103,9 @@ pdf(paste0(plotdir,"/S3Fig.pdf"), width = 7, height = 6.5)
 print(SFig3)
 dev.off()
 
+ggsave(filename = paste0(plotdir,"/S3Fig.png"), 
+       plot = SFig3,
+       width = 7, 
+       height = 6.5, 
+       units = "in", dpi = 400)
+

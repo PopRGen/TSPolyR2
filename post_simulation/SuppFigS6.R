@@ -366,3 +366,10 @@ S6_new <- newS6_1 + newS6_2 +
 pdf("Figures/supplementary_figures/FigS6.pdf", width = 14, height = 8)
 print(S6_new)
 dev.off()
+
+
+ggsave(filename = "Figures/supplementary_figures/FigS6.png", 
+       plot = S6_new,
+       width = 14, 
+       height = 8, 
+       units = "in", dpi = 400)

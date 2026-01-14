@@ -74,3 +74,10 @@ ancestral_poly <- ggplot(datH_trans |> filter(phi<1), aes(x=factor(phi), fill= f
 pdf(paste0(supplementary_figures,"/S7Fig_ancestral_poly.pdf"), width = 8, height = 5)
 print(ancestral_poly)
 dev.off()
+
+
+ggsave(filename = paste0(supplementary_figures,"/S7Fig_ancestral_poly.png"), 
+       plot = ancestral_poly,
+       width = 8, 
+       height = 5, 
+       units = "in", dpi = 400)

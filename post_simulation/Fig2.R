@@ -23,16 +23,18 @@ require("RColorBrewer") # needed for color coding the cell of the formatted late
 XiH_value <- 3
 XiP_value <- 3
 
+indir <- "results_random"
+
 datH_dat <- read_tsv("datH_dat.tsv")
 datP_dat <- read_tsv("datP_dat.tsv")
 
 setwd(indir)
 
-outdir <- "../Figures"
+outdir <- "Figures"
 
 main_figures <- paste0(outdir,"/main_figures")
 supplementary_figures <- paste0(outdir, "/supplementary_figures")
-tabledir <- "../supplementary_tables"
+tabledir <- "supplementary_tables"
 
 # Check if all output directories already exist. If not, create them
 # parent output directory
@@ -304,6 +306,11 @@ pdf(paste0(main_figures,"/Fig_2_ralleles.pdf"), width = 15, height = 9)
 print(Fig2_new)
 dev.off()
 
+ggsave(filename = paste0(main_figures,"/Fig_2_ralleles.png"), 
+       plot = Fig2_new,
+       width = 15, 
+       height = 9, 
+       units = "in", dpi = 400)
 
 ####### Export all values for different combinations of shape parameters and relative proportions of hosts
 

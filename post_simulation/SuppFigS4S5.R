@@ -239,6 +239,11 @@ pdf(paste0(supplementary_figures,"/S4Fig_alleles_maintained.pdf"), width = 15, h
 print(SFig4_new)
 dev.off()
 
+ggsave(filename = paste0(supplementary_figures,"/S4Fig_alleles_maintained.png"), 
+       plot = SFig4_new,
+       width = 15, 
+       height = 9, 
+       units = "in", dpi = 400)
 
 #################################
 ## Figure S5
@@ -357,4 +362,10 @@ SFig5_new <- Rcombi_costcombi_plt_hostH + theme(legend.position = "none") +
 pdf(paste0(supplementary_figures,"/S5Fig_maintained_detail.pdf"),width = 15, height=8)
 print(SFig5_new)
 dev.off()
+
+ggsave(filename = paste0(supplementary_figures,"/S5Fig_maintained_detail.png"), 
+       plot = SFig5_new,
+       width = 15, 
+       height = 8, 
+       units = "in", dpi = 400)
 
