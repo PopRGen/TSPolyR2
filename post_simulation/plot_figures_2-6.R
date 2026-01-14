@@ -113,7 +113,12 @@ datH_dat <- datH_dat |>
                                        "private: R, shared: R",
                                        "private: R/S, shared: R",                                      
                                        "private: R, shared: R/S",
-                                       "private: R/S, shared: R/S")))
+                                       "private: R/S, shared: R/S"))) |>
+  rename(c("OmegaH" = "CH1",
+           "OmegaP" = "CP1",
+           "XiH" = "CH2",
+           "XiP" = "CP2" ))
+
 
 # Read the file for the pathogen
 datP <- lapply(to_readP, function(x){
@@ -125,7 +130,11 @@ datP_dat <- bind_rows(datP)
 # Add more information to the pathogen df
 datP_dat <- datP_dat |>
   mutate(shape_combi=paste(CH2, CP2, sep="_")) |>
-  mutate(Species_label="Pathogen")
+  mutate(Species_label="Pathogen") |>
+  rename(c("OmegaH" = "CH1",
+           "OmegaP" = "CP1",
+           "XiH" = "CH2",
+           "XiP" = "CP2" ))
 
 # Check if everything looks right
 # There should be a total of 630,000 lines in the combined host data frame
@@ -145,7 +154,8 @@ datP_dat |>
   group_by(shape_combi, phi, Species_label) |>
   summarize(n=n()) |> filter(n !=10000)
 
-
+write_tsv(datH_dat, "datH_dat.tsv")
+write_tsv(datP_dat, "datP_dat.tsv")
 
 # Figure 2 ----------------------------------------------------------------
 
