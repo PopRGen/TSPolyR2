@@ -25,10 +25,9 @@ XiP_value <- 3
 
 indir <- "results_random"
 
-datH_dat <- read_tsv("datH_dat.tsv")
-datP_dat <- read_tsv("datP_dat.tsv")
+datH_dat <- read_tsv(paste0(indir,"/datH_dat.tsv"))
+datP_dat <- read_tsv(paste0(indir,"/datP_dat.tsv"))
 
-setwd(indir)
 
 outdir <- "Figures"
 
@@ -98,7 +97,7 @@ Ralleles_summary <- caseH_phi |>
   mutate(Rcombi = case_when(
     R_alleles == 0 ~ "none",
     R_alleles == 1 ~ "private only",
-    R_alleles == 2 ~ "ancestral only",
+    R_alleles == 2 ~ "shared only",
     R_alleles == 3 ~ "both", 
     TRUE ~ "unaccounted"
   ))
@@ -123,7 +122,7 @@ pt_phi_Ralleles_plt <- ggplot(caseH_phi, aes(x=OmegaH, y=OmegaP)) +
                "3" = "#3C5488FF"), 
     labels = c("0" = "none", 
                "1" = "private only", 
-               "2" = "ancestral only", 
+               "2" = "shared only", 
                "3" = "both"), 
     name = "Resistance alleles\nmaintained", 
     drop = FALSE  # Ensures unused factor levels are retained
@@ -175,7 +174,7 @@ f2 <- ggplot(caseH_phi , aes(x="", fill=factor(R_alleles, levels = c(rev(as.char
                                "3" = "#3C5488FF"), 
                     labels = c("0" = "none",
                                "1" = "private only", 
-                               "2" = "ancestral only", 
+                               "2" = "shared only", 
                                "3" = "both"), 
                     name = "",
                     drop = FALSE  # Ensures unused factor levels are retained
@@ -226,7 +225,7 @@ R_alleles_summary <- datH_dat |>
   mutate(Rcombi = case_when(
     R_alleles == 0 ~ "none",
     R_alleles == 1 ~ "private only",
-    R_alleles == 2 ~ "ancestral only",
+    R_alleles == 2 ~ "shared only",
     R_alleles == 3 ~ "both", 
     TRUE ~ "unaccounted"
   ))
@@ -252,7 +251,7 @@ R_alleles_acrossall_plt <- ggplot(datH_dat, aes(x="", fill= factor(R_alleles, le
                "3" = "#3C5488FF"), 
     labels = c("0" = "none", 
                "1" = "private only", 
-               "2" = "ancestral only", 
+               "2" = "shared only", 
                "3" = "both"), 
     name = "Maintained\nresistance alleles", 
     drop = FALSE  # Ensures unused factor levels are retained
@@ -319,7 +318,7 @@ R_alleles_summary_shape <- datH_dat |>
   mutate(Rcombi = case_when(
     R_alleles == 0 ~ "none",
     R_alleles == 1 ~ "private only",
-    R_alleles == 2 ~ "ancestral only",
+    R_alleles == 2 ~ "shared only",
     R_alleles == 3 ~ "both", 
     TRUE ~ "unaccounted"
   )) |>
@@ -347,7 +346,7 @@ out_all_Rsum_shape <- R_alleles_summary_shape |>
   select( phi, XiH, XiP, starts_with("Host"), shape_combi) |>
   arrange(shape_combi, phi) |>
   select(-shape_combi) |>
-  select(XiH, XiP, phi, `Host H: both`, `Host H: private only`, `Host H: ancestral only`, `Host H: none`, `Host M: both`, `Host M: private only`, `Host M: ancestral only`, `Host M: none`)
+  select(XiH, XiP, phi, `Host H: both`, `Host H: private only`, `Host H: shared only`, `Host H: none`, `Host M: both`, `Host M: private only`, `Host M: shared only`, `Host M: none`)
 
 write_tsv(out_all_Rsum_shape, paste0(tabledir, "/SuppTab_Rmaintained_per_shapephi_combi.tsv"))
 
