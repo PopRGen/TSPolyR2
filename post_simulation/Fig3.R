@@ -94,7 +94,7 @@ poly_summary <- caseH_phi |>
   mutate(poly = case_when(
     poly == 0 ~ "none",
     poly == 1 ~ "private only",
-    poly == 2 ~ "ancestral only",
+    poly == 2 ~ "shared only",
     poly == 3 ~ "both", 
     TRUE ~ "unaccounted"
   )) |>
@@ -118,7 +118,7 @@ pt_phi_poly_plt <- ggplot(caseH_phi, aes(x=OmegaH, y=OmegaP)) +
                                 "3" = "#3C5488FF"), 
                      labels = c("0" = "none", 
                                 "1" = "private only", 
-                                "2" = "ancestral only",
+                                "2" = "shared only",
                                 "3" = "both"), 
                      name = "Maintained polymorphism", 
                      drop = FALSE  # Ensures unused factor levels are retained
@@ -160,7 +160,7 @@ fpoly <- ggplot(caseH_phi , aes(x="", fill=factor(poly, levels = rev(as.characte
                "3" = "#3C5488FF"),
     labels = c("0" = "none",
                "1" = "private only",
-               "2" = "ancestral only",
+               "2" = "shared only",
                "3" = "both"), 
     name = "", 
     drop = FALSE) +
@@ -218,7 +218,7 @@ npoly_summary <- datH_dat |>
   mutate(poly = case_when(
     poly == 0 ~ "none",
     poly == 1 ~ "private only",
-    poly == 2 ~ "ancestral only",
+    poly == 2 ~ "shared only",
     poly == 3 ~ "both", 
     TRUE ~ "unaccounted"
   ))
@@ -244,7 +244,7 @@ polyprops_acrossall_plt <- ggplot(datH_dat, aes(x="", fill= factor(poly, levels 
                "3" = "#3C5488FF"), 
     labels = c("0" = "none", 
                "1" = "private only", 
-               "2" = "ancestral only", 
+               "2" = "shared only", 
                "3" = "both"), 
     name = "Maintained\npolymorphism", 
     drop = FALSE  # Ensures unused factor levels are retained
@@ -314,7 +314,7 @@ poly_summary_shape <- datH_dat |>
   mutate(polycombi = case_when(
     poly == 0 ~ "none",
     poly== 1 ~ "private only",
-    poly == 2 ~ "ancestral only",
+    poly == 2 ~ "shared only",
     poly == 3 ~ "both", 
     TRUE ~ "unaccounted"
   )) |>
@@ -342,7 +342,7 @@ out_all_poly_shape <- poly_summary_shape |>
   select( phi, XiH, XiP, starts_with("Host"), shape_combi) |>
   arrange(shape_combi, phi) |>
   select(-shape_combi) |>
-  select(XiH, XiP, phi, `Host H: both`, `Host H: private only`, `Host H: ancestral only`, `Host H: none`, `Host M: both`, `Host M: private only`, `Host M: ancestral only`, `Host M: none`)
+  select(XiH, XiP, phi, `Host H: both`, `Host H: private only`, `Host H: shared only`, `Host H: none`, `Host M: both`, `Host M: private only`, `Host M: shared only`, `Host M: none`)
 
 write_tsv(out_all_poly_shape, paste0(tabledir, "/SuppTab_poly_per_shapephi_combi.tsv"))
 
