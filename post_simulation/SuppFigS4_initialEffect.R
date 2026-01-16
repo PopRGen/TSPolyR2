@@ -12,7 +12,7 @@ options(scipen = 999)
 # Note for backward compatibility and outlining the reasoning of some checks
 # for the new version of the plot the plot to generate the original S6_Figure is still included
 
-indir <- "Data_SuppFig6"
+indir <- "Data_SFig4"
 
 XiH_select <- 0
 XiP_select <- 0
@@ -25,6 +25,10 @@ plotdir <- "Figures/supplementary_figures"
 prefix <- "ext_reps"
 suffix <- "2025-01-07"
 
+
+if(!dir.exists(plotdir)){
+  dir.create(plotdir, recursive = TRUE)
+}
 
 outprefix <- paste0(plotdir,"/CH1_", omegaH_select,"_CP1_", omegaP_select, "_CH2_", XiH_select, "_CP2_", XiP_select, "_phi_", phi_select)
 
@@ -294,7 +298,7 @@ seedtplt <- fixcheck |>
   filter(id <= ntoselect) |>
   pull(seed)
 
-newS6_dat <- investigation_dat |> 
+newS4_dat <- investigation_dat |> 
   filter(seed%in%seedtplt) |>
   mutate(species_label = case_when(
     Species == "H1" ~ "Host H",
@@ -304,7 +308,7 @@ newS6_dat <- investigation_dat |>
   mutate(ltest = paste0("rep", as.numeric(as.factor(seed)))) 
 
 
-newS6_1 <- ggplot(newS6_dat, aes(time,freq)) + 
+newS4_1 <- ggplot(newS4_dat, aes(time,freq)) + 
   facet_grid(cols = vars(species_label), rows = vars(ltest)) + 
   geom_line(aes(color = Genotype), linewidth = 0.8) + 
   #geom_point(aes(color = Genotype), size = 0.2) +
@@ -325,7 +329,7 @@ newS6_1 <- ggplot(newS6_dat, aes(time,freq)) +
         panel.spacing.y = unit(0.8, "cm"),
         panel.spacing.x = unit(0.8, "cm")) 
 
-newS6_2 <- ggplot(newS6_dat, aes(time,freq)) + 
+newS4_2 <- ggplot(newS4_dat, aes(time,freq)) + 
   facet_grid(cols = vars(species_label), rows = vars(ltest)) + 
   geom_line(aes(color = Genotype), linewidth = 0.8) + 
   #geom_point(aes(color = Genotype), size = 0.2) +
@@ -348,7 +352,7 @@ newS6_2 <- ggplot(newS6_dat, aes(time,freq)) +
 
 
 
-S6_new <- newS6_1 + newS6_2 +
+S4_new <- newS4_1 + newS4_2 +
   plot_layout(ncol = 2, guides = "collect") +
   # Add labels to the subfigures
   plot_annotation(
@@ -363,13 +367,13 @@ S6_new <- newS6_1 + newS6_2 +
     plot.title = element_text(face = 2, size = 16)
   )
 
-pdf("Figures/supplementary_figures/FigS6.pdf", width = 14, height = 8)
-print(S6_new)
+pdf(paste0(plotdir, "/FigS4_initialEffect.pdf"), width = 14, height = 8)
+print(S4_new)
 dev.off()
 
 
-ggsave(filename = "Figures/supplementary_figures/FigS6.png", 
-       plot = S6_new,
+ggsave(filename = paste0(plotdir, "/FigS4_initialEffect.png"), 
+       plot = S4_new,
        width = 14, 
        height = 8, 
        units = "in", dpi = 400)
