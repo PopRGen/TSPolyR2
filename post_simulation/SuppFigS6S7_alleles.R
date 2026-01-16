@@ -91,7 +91,7 @@ maintained_summary <- caseH_phi |>
 
 
 ############################
-## Plot S4Fig A ###########
+## Plot S6Fig A ###########
 ###########################
 
 maintained_alleles_standard <- ggplot(caseH_phi, aes(x=OmegaH, y=OmegaP)) + 
@@ -129,7 +129,7 @@ maintained_alleles_standard <- ggplot(caseH_phi, aes(x=OmegaH, y=OmegaP)) +
 
 
 #############################
-# Generate S4Fig B #########
+# Generate S6Fig B #########
 ############################
 
 f_combi <- ggplot(caseH_phi , aes(x="", fill=combi_maintained)) + 
@@ -179,7 +179,7 @@ combi_summary <- datH_dat %>%
 
 
 #############################
-# Generate S4Fig C #########
+# Generate S6Fig C #########
 ############################
 
 combimaintained_acrossall_plt <- ggplot(datH_dat, aes(x="", fill= factor(combi_maintained))) + 
@@ -217,7 +217,7 @@ combimaintained_acrossall_plt <- ggplot(datH_dat, aes(x="", fill= factor(combi_m
   theme(legend.text = element_text(size = 13)) 
 
 ## Combine all plots into the final figure
-SFig4_new <- maintained_alleles_standard + theme(legend.position = "none") + ggtitle("Effect of maximum costs\nfor fixed shapes") +
+SFig6_new <- maintained_alleles_standard + theme(legend.position = "none") + ggtitle("Effect of maximum costs\nfor fixed shapes") +
   plot_spacer() +
   f_combi + theme(legend.position = "none") +  ggtitle("Summary maximum\ncosts fixed shapes")  +
   combimaintained_acrossall_plt +
@@ -235,18 +235,18 @@ SFig4_new <- maintained_alleles_standard + theme(legend.position = "none") + ggt
     plot.title = element_text(face = 2, size = 16)
   )
 
-pdf(paste0(supplementary_figures,"/S4Fig_alleles_maintained.pdf"), width = 15, height = 9)
-print(SFig4_new)
+pdf(paste0(supplementary_figures,"/S6Fig_allelesOverview.pdf"), width = 15, height = 9)
+print(SFig6_new)
 dev.off()
 
-ggsave(filename = paste0(supplementary_figures,"/S4Fig_alleles_maintained.png"), 
-       plot = SFig4_new,
+ggsave(filename = paste0(supplementary_figures,"/S6Fig_allelesOverview.png"), 
+       plot = SFig6_new,
        width = 15, 
        height = 9, 
        units = "in", dpi = 400)
 
 #################################
-## Figure S5
+## Figure S7
 #################################
 
 
@@ -267,7 +267,7 @@ combi_summary_precise <- datH_dat |>
 
 
 ################################
-## Plot S5Fig A ###############
+## Plot S7Fig A ###############
 ###############################
 
 Rcombi_costcombi_plt_hostH <- ggplot(datH_dat |> filter(Species_label == "Host H"), aes(x=as.factor(phi), 
@@ -303,7 +303,7 @@ Rcombi_costcombi_plt_hostH <- ggplot(datH_dat |> filter(Species_label == "Host H
   ggtitle("Host species H")
 
 ################################
-## Plot S5Fig B ###############
+## Plot S7Fig B ###############
 ###############################
 
 Rcombi_costcombi_plt_hostM <- ggplot(datH_dat |> mutate(phi = factor(phi)) |> filter(Species_label == "Host M"),
@@ -343,7 +343,7 @@ Rcombi_costcombi_plt_hostM <- ggplot(datH_dat |> mutate(phi = factor(phi)) |> fi
 ## Generate the combined plot ###
 #################################
 
-SFig5_new <- Rcombi_costcombi_plt_hostH + theme(legend.position = "none") +
+SFig7_new <- Rcombi_costcombi_plt_hostH + theme(legend.position = "none") +
   Rcombi_costcombi_plt_hostM  +
   plot_layout(
     widths = c(1, 1),    # 1/3 : 2/3 column ratio
@@ -359,12 +359,12 @@ SFig5_new <- Rcombi_costcombi_plt_hostH + theme(legend.position = "none") +
     plot.title = element_text(face = 2, size = 16)
   )
 
-pdf(paste0(supplementary_figures,"/S5Fig_maintained_detail.pdf"),width = 15, height=8)
-print(SFig5_new)
+pdf(paste0(supplementary_figures,"/S7Fig_allelesCombi.pdf"),width = 15, height=8)
+print(SFig7_new)
 dev.off()
 
-ggsave(filename = paste0(supplementary_figures,"/S5Fig_maintained_detail.png"), 
-       plot = SFig5_new,
+ggsave(filename = paste0(supplementary_figures,"/S7Fig_allelesCombi.png"), 
+       plot = SFig7_new,
        width = 15, 
        height = 8, 
        units = "in", dpi = 400)
