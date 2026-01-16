@@ -6,9 +6,8 @@ require("ggExtra") # for the ggMarginal function
 require("ggpubr") # For annotations
 
 # Description: 
-# This script will plot the proportion of simulations for which genotype with given numbers of resistance and or virulence
-# alleles are maintained
-# For example: 0 + 1 indicates that the haplotype wi
+# This script plots the proportion of simulations for which polymormphism at the shared resistance gene
+# is maintained in none of both host species, only in host species M, only in host species H, as trans-species polymorphism (in both hosts)
 
 # Directory with the data files for plotting
 indir <- "results_random"
@@ -48,7 +47,7 @@ combi_summary <- datH_trans |>
 
 
 
-ancestral_poly <- ggplot(datH_trans |> filter(phi<1), aes(x=factor(phi), fill= factor(transspecific))) + 
+shared_poly <- ggplot(datH_trans |> filter(phi<1), aes(x=factor(phi), fill= factor(transspecific))) + 
   geom_bar(stat = "count", position = "fill", show.legend = TRUE) + 
   facet_grid(cols = vars(XiH), rows = vars(XiP), labeller=label_bquote(cols = Xi[H] == .(XiH), rows = Xi[{P}] == .(XiP))) + 
   labs(x = "Species", 
@@ -56,7 +55,7 @@ ancestral_poly <- ggplot(datH_trans |> filter(phi<1), aes(x=factor(phi), fill= f
   theme_minimal() +
   labs(x = bquote("Proportion of host H ("*phi*")"), 
        y = "Proportion") +
-  scale_fill_manual(values = rev(c("#8E0152FF","#C51B7DFF","#F1B6DAFF","gray85")),name="Polymorphism at\nancestral R-gene") +
+  scale_fill_manual(values = rev(c("#8E0152FF","#C51B7DFF","#F1B6DAFF","gray85")),name="Polymorphism at\nshared R-gene") +
   theme_bw() +
   geom_text(data = combi_summary , aes(y=prop_y, label = label, group = transspecific), 
             position = position_stack(vjust=0.5),  # Adjust label position
@@ -71,13 +70,13 @@ ancestral_poly <- ggplot(datH_trans |> filter(phi<1), aes(x=factor(phi), fill= f
         panel.grid = element_blank(),
         strip.background = element_rect(fill = "white", colour = "white")) 
 
-pdf(paste0(supplementary_figures,"/S7Fig_ancestral_poly.pdf"), width = 8, height = 5)
-print(ancestral_poly)
+pdf(paste0(supplementary_figures,"/S8Fig_sharedMaintain.pdf"), width = 8, height = 5)
+print(shared_poly)
 dev.off()
 
 
-ggsave(filename = paste0(supplementary_figures,"/S7Fig_ancestral_poly.png"), 
-       plot = ancestral_poly,
+ggsave(filename = paste0(supplementary_figures,"/S8Fig_sharedMaintain.png"), 
+       plot = shared_poly,
        width = 8, 
        height = 5, 
        units = "in", dpi = 400)
