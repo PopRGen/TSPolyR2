@@ -98,12 +98,13 @@ poly_summary <- caseH_phi |>
     poly == 3 ~ "both", 
     TRUE ~ "unaccounted"
   )) |>
-  mutate(poly = factor(poly, levels = c("none", "private only", "ancestral only", "both")))
+  mutate(poly = factor(poly, levels = c("both", "shared only", "private only", "none")))
 
 # Output the essential parts of the summary table
 out_std_poly <- poly_summary |>
   select(Species_label, phi, poly, prop_y) |>
   mutate(prop_y = format(round(prop_y, digits =3), nsmall = 3)) |>
+  arrange(poly) |>
   pivot_wider(values_from = prop_y, names_from = poly)
 
 write_csv(out_std_poly, paste0(tabledir, "/out_std_poly.csv"))
@@ -224,6 +225,8 @@ npoly_summary <- datH_dat |>
   ))
 
 out_all_poly <- npoly_summary |>
+  mutate(poly = factor(poly, levels = c("both", "shared only", "private only", "none"))) |>
+  arrange(poly) |>
   select(Species_label, phi_label, poly, prop_y) |>
   mutate(prop_y = format(round(prop_y, digits =3), nsmall = 3)) |>
   pivot_wider(values_from = prop_y, names_from = poly)
